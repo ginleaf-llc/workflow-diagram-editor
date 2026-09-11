@@ -1,0 +1,23 @@
+{
+  "name": "workflow-diagram-editor",
+  "version": "1.0.0",
+  "description": "ブラウザ上でMiro風のワークフロー図を作成・編集できる、依存ライブラリ不要の静的HTMLツールです。カードの追加・移動・編集、カード間の矢印接続、図のHTML書き出しに対応しています。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kosuke-8899/workflow-diagram-editor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kosuke-8899/workflow-diagram-editor/issues"
+  },
+  "homepage": "https://github.com/kosuke-8899/workflow-diagram-editor#readme",
+  "devDependencies": {
+    "wrangler": "^4.131.0"
+  }
+}
