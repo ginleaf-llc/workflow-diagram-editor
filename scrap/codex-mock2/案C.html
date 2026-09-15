@@ -60,7 +60,7 @@
     .shell {
       display: grid;
       grid-template-columns: 245px minmax(0, 1fr);
-      height: calc(100vh - 82px);
+      height: 100vh;
       min-height: 0;
     }
     .app-panel {
@@ -658,7 +658,7 @@
 
     @media (max-width: 760px) {
       .mast { height: 72px; padding: 14px 16px; }
-      .shell { grid-template-columns: 220px minmax(0, 1fr); height: calc(100vh - 72px); }
+      .shell { grid-template-columns: 220px minmax(0, 1fr); height: 100vh; }
       .app-panel { padding: 14px 9px 10px; }
       .meta { display: none; }
       .bar { padding: 0 14px; }
@@ -678,11 +678,6 @@
   </style>
 </head>
 <body>
-  <header class="mast">
-    <h1><span>ENGINEERING SPACE</span>Architecture Desk</h1>
-    <div class="meta"><b>9 Applications</b>横断ワークスペース</div>
-  </header>
-
   <div class="shell">
     <aside class="app-panel" aria-label="アプリ一覧パネル">
       <div class="app-panel-header"><strong>APPLICATIONS</strong><small>9 repositories</small></div>
