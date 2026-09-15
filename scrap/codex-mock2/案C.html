@@ -5,24 +5,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>案C — Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
   <style>
     :root {
-      --canvas: #f4f2ee;
-      --dot: #ddd8ce;
-      --card: #fff;
-      --border: #e6e2d8;
-      --ink: #21201c;
-      --muted: #79756a;
-      --line: #918b80;
-      --agent: #7c4ded;
-      --agent-soft: #f1ecff;
-      --chat: #2166e8;
-      --chat-soft: #e9f0ff;
-      --future: #b34ded;
-      --future-soft: #f7ecff;
-      --neutral: #66707d;
-      --neutral-soft: #f0f2f4;
-      --shadow: 0 1px 2px #1e1a0f0d, 0 8px 20px -8px #1e1a0f2e;
+      --canvas: #eef0f2;
+      --dot: #cbd1d6;
+      --card: #ffffff;
+      --border: #d7dbe0;
+      --ink: #14181c;
+      --muted: #5b6570;
+      --line: #87919a;
+      --teal: #0e6e73;
+      --teal-soft: #e5f0f1;
+      --chat: #3d6672;
+      --chat-soft: #e8eff1;
+      --amber: #b06a2c;
+      --amber-soft: #fbefe5;
+      --neutral: #65717b;
+      --neutral-soft: #eef0f2;
+      --shadow: 0 1px 2px rgba(20, 24, 28, .08);
     }
 
     * { box-sizing: border-box; }
@@ -32,13 +35,28 @@
       overflow: hidden;
       background: var(--canvas);
       color: var(--ink);
-      font: 13px Inter, "Noto Sans JP", system-ui;
+      font: 13px "Public Sans", "Noto Sans JP", system-ui, sans-serif;
     }
     button { font: inherit; }
 
+    .app-panel,
+    .bar,
+    .mast,
+    .note,
+    .workflow-mode,
+    .add-node,
+    .workflow-editor,
+    .other h2,
+    .flow-card,
+    .group label,
+    .node-id,
+    .node span {
+      font-family: "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
+
     .mast {
       height: 82px;
-      background: #1f1f22;
+      background: var(--ink);
       color: white;
       padding: 16px 24px;
       display: flex;
@@ -49,12 +67,12 @@
     .mast h1 { font-size: 15px; margin: 0; width: auto; }
     .mast h1 span {
       display: block;
-      color: #929098;
+      color: #9aa4ad;
       font-size: 9px;
       letter-spacing: .14em;
       margin-bottom: 5px;
     }
-    .meta { text-align: right; color: #aaa8b0; font-size: 10px; }
+    .meta { text-align: right; color: #9aa4ad; font-size: 10px; }
     .meta b { display: block; color: white; font-size: 12px; margin-bottom: 4px; }
 
     .shell {
@@ -68,7 +86,7 @@
       min-height: 0;
       flex-direction: column;
       padding: 18px 14px 14px;
-      background: #fbfaf8;
+      background: #f8f9fa;
       border-right: 1px solid var(--border);
     }
     .app-panel-header {
@@ -91,12 +109,12 @@
       color: var(--ink);
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 4px;
       outline: none;
       font-size: 11px;
     }
-    .app-search input:focus { border-color: var(--agent); box-shadow: 0 0 0 3px var(--agent-soft); }
-    .app-search input::placeholder { color: #a39e94; }
+    .app-search input:focus { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft); }
+    .app-search input::placeholder { color: #89939c; }
     .app-search-icon {
       position: absolute;
       top: 10px;
@@ -125,7 +143,7 @@
       gap: 4px;
       overflow-y: auto;
       padding: 2px 4px 6px;
-      scrollbar-color: #c9c2b5 transparent;
+      scrollbar-color: #b8c0c6 transparent;
       scrollbar-width: thin;
     }
     .app {
@@ -135,19 +153,20 @@
       color: var(--muted);
       background: transparent;
       border: 1px solid transparent;
-      border-radius: 9px;
+      border-radius: 4px;
       text-align: left;
       cursor: pointer;
+      transition: background .1s ease-out;
     }
-    .app:hover { background: #f2efe9; color: var(--ink); }
-    .app b { display: block; overflow: hidden; color: var(--ink); font-size: 11px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+    .app:hover { background: #f0f3f4; }
+    .app b { display: block; overflow: hidden; color: var(--ink); font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
     .app small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
     .app.active {
-      background: var(--agent-soft);
-      border-color: #ddd1fb;
-      box-shadow: inset 3px 0 0 var(--agent);
+      background: var(--card);
+      border-color: var(--border);
+      box-shadow: inset 2px 0 0 var(--teal);
     }
-    .app.active b { color: var(--agent); }
+    .app.active b { color: var(--teal); }
     .app-panel-footer {
       margin: 10px 5px 0;
       padding: 12px 7px 0;
@@ -174,26 +193,30 @@
       padding: 0 24px;
       gap: 4px;
     }
-    .bar strong { margin-right: 24px; font-size: 12px; }
+    .bar strong { margin-right: 24px; color: var(--ink); font-size: 12px; letter-spacing: .02em; }
     .tab {
       border: 0;
-      border-radius: 8px;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
       background: transparent;
-      padding: 9px 15px;
+      padding: 20px 12px 18px;
       color: var(--muted);
       font-weight: 700;
       cursor: pointer;
+      transition: color .1s ease-out, border-color .1s ease-out;
     }
-    .tab.active { background: var(--agent-soft); color: var(--agent); }
+    .tab:hover { color: var(--ink); }
+    .tab.active { background: transparent; color: var(--teal); border-bottom-color: var(--teal); }
     .bar .tools { margin-left: auto; display: flex; gap: 7px; }
     .tools button {
       border: 1px solid var(--border);
       background: var(--card);
-      border-radius: 8px;
+      border-radius: 4px;
       padding: 8px 11px;
       font-weight: 700;
+      cursor: pointer;
     }
-    .tools .primary { color: white; background: var(--agent); border-color: var(--agent); }
+    .tools .primary { color: white; background: var(--teal); border-color: var(--teal); }
 
     .stage {
       min-height: 0;
@@ -202,13 +225,24 @@
       background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.2px);
       background-size: 22px 22px;
     }
+    .view { will-change: opacity, transform; }
+    .view.is-entering { animation: view-enter .18s ease-out both; }
+    .view.is-leaving { animation: view-leave .18s ease-out both; }
+    @keyframes view-enter {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes view-leave {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-8px); }
+    }
     .board { position: relative; width: 1230px; min-height: 700px; padding: 24px 30px; }
     .workflow-canvas {
       position: relative;
       width: 860px;
       height: 620px;
       border: 1px solid transparent;
-      border-radius: 20px;
+      border-radius: 4px;
       transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
     }
     .workflow-canvas .note { top: 0; left: 0; }
@@ -220,63 +254,77 @@
       position: absolute;
       top: 3px;
       right: 114px;
-      display: none;
+      display: inline-flex;
       z-index: 4;
       align-items: center;
       gap: 6px;
       padding: 7px 9px;
-      color: var(--agent);
-      background: var(--agent-soft);
-      border: 1px solid #ddd1fb;
-      border-radius: 8px;
+      visibility: hidden;
+      opacity: 0;
+      color: var(--teal);
+      background: var(--card);
+      border: 1px solid var(--teal);
+      border-radius: 3px;
       font-size: 9px;
       font-weight: 800;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity .18s ease-out, transform .18s ease-out, visibility .18s ease-out;
     }
     .workflow-mode::before {
       content: "";
       width: 6px;
       height: 6px;
-      background: var(--agent);
-      border-radius: 50%;
+      background: var(--teal);
     }
     .add-node {
       position: absolute;
       top: 3px;
       right: 0;
-      display: none;
+      display: inline-flex;
       z-index: 4;
       align-items: center;
       gap: 6px;
       padding: 7px 10px;
       color: white;
-      background: var(--agent);
-      border: 1px solid var(--agent);
-      border-radius: 8px;
-      box-shadow: 0 4px 10px #7c4ded2e;
+      visibility: hidden;
+      opacity: 0;
+      background: var(--teal);
+      border: 1px solid var(--teal);
+      border-radius: 3px;
       cursor: pointer;
       font-size: 10px;
       font-weight: 800;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity .18s ease-out, transform .18s ease-out, visibility .18s ease-out;
     }
     .add-node::before {
       content: "";
       width: 12px;
       height: 12px;
       border: 1px solid #ffffffaa;
-      border-radius: 4px;
+      border-radius: 2px;
       background: linear-gradient(#fff, #fff) center / 7px 1px no-repeat, linear-gradient(#fff, #fff) center / 1px 7px no-repeat;
     }
     .board.editing .workflow-canvas {
-      background: #f8f4ff80;
-      border-color: #d5c5f8;
-      box-shadow: inset 0 0 0 3px #f1ecff99;
+      background: #e5f0f166;
+      border-color: var(--teal);
+      box-shadow: inset 0 0 0 2px #e5f0f199;
     }
     .board.editing .workflow-mode,
-    .board.editing .add-node { display: inline-flex; }
+    .board.editing .add-node {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .node:hover { border-color: var(--teal); transform: translateY(-1px); }
     .board.editing .node { cursor: pointer; }
     .board.editing .node:hover,
     .board.editing .node.selected {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--soft), var(--shadow);
+      border-color: var(--teal);
+      box-shadow: 0 0 0 2px var(--teal-soft), var(--shadow);
     }
     .node-actions {
       position: absolute;
@@ -302,7 +350,7 @@
       place-items: center;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 3px;
       cursor: pointer;
     }
     .node-action:hover { border-color: var(--accent); background: var(--soft); }
@@ -343,15 +391,20 @@
       color: var(--ink);
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 4px;
       box-shadow: var(--shadow);
-      transform: translateX(8px);
-      transition: opacity .2s ease, transform .2s ease, visibility .2s ease;
+      transform: translateX(16px);
+      transition: opacity .2s ease-out, transform .2s ease-out, visibility .2s ease-out;
     }
     .board.editing .workflow-editor {
       visibility: visible;
       opacity: 1;
       transform: translateX(0);
+    }
+    .workflow-editor.is-switching { animation: editor-switch .2s ease-out both; }
+    @keyframes editor-switch {
+      from { opacity: .35; transform: translateX(12px); }
+      to { opacity: 1; transform: translateX(0); }
     }
     .editor-header {
       display: flex;
@@ -363,7 +416,7 @@
     }
     .editor-kicker {
       display: block;
-      color: var(--agent);
+      color: var(--teal);
       font-size: 8px;
       font-weight: 800;
       letter-spacing: .14em;
@@ -372,9 +425,10 @@
     .editor-status {
       flex: 0 0 auto;
       padding: 4px 6px;
-      color: var(--agent);
-      background: var(--agent-soft);
-      border-radius: 5px;
+      color: var(--teal);
+      background: transparent;
+      border: 1px solid var(--teal);
+      border-radius: 2px;
       font-size: 8px;
       font-weight: 800;
     }
@@ -387,28 +441,28 @@
       width: 100%;
       padding: 8px 9px;
       color: var(--ink);
-      background: #fcfbfa;
+      background: #fafbfc;
       border: 1px solid var(--border);
-      border-radius: 7px;
+      border-radius: 3px;
       outline: none;
       font-size: 10px;
     }
     .editor-field textarea { min-height: 54px; resize: vertical; line-height: 1.5; }
     .editor-field input:focus,
     .editor-field textarea:focus,
-    .editor-field select:focus { border-color: var(--agent); box-shadow: 0 0 0 3px var(--agent-soft); }
+    .editor-field select:focus { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft); }
     .editor-actions { display: flex; justify-content: flex-end; gap: 7px; padding-top: 4px; }
     .editor-actions button {
       padding: 7px 9px;
       color: var(--muted);
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 7px;
+      border-radius: 3px;
       cursor: pointer;
       font-size: 9px;
       font-weight: 800;
     }
-    .editor-actions .save { color: white; background: var(--agent); border-color: var(--agent); }
+    .editor-actions .save { color: white; background: var(--teal); border-color: var(--teal); }
     .editor-hint { margin: 13px 0 0; color: var(--muted); font-size: 9px; line-height: 1.55; }
     .note {
       position: absolute;
@@ -416,7 +470,7 @@
       left: 30px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 4px;
       padding: 10px 12px;
       box-shadow: var(--shadow);
     }
@@ -424,8 +478,8 @@
     .note small { color: var(--muted); }
     .group {
       position: absolute;
-      border: 1px dashed #c9c2b5;
-      border-radius: 20px;
+      border: 1px dashed #b8c0c6;
+      border-radius: 4px;
       background: #fff5;
     }
     .group label {
@@ -442,35 +496,53 @@
       width: 186px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 15px 13px;
+      border-radius: 4px;
+      padding: 12px 13px 12px;
       box-shadow: var(--shadow);
+      transition: border-color .1s ease-out, transform .1s ease-out, box-shadow .1s ease-out;
     }
-    .node:before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 15px;
-      right: 15px;
-      height: 4px;
-      border-radius: 0 0 4px 4px;
-      background: var(--accent);
+    .node-id {
+      display: block;
+      color: var(--muted);
+      font-size: 8px;
+      line-height: 1;
+      letter-spacing: .12em;
     }
-    .node h3 { font-size: 13px; margin: 2px 0 4px; }
-    .node p { font-size: 10px; color: var(--muted); line-height: 1.5; margin: 0; }
+    .node h3 {
+      margin: 8px 0 4px;
+      padding-right: 38px;
+      color: var(--ink);
+      font: 700 12px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
+    .node p {
+      font: 10px/1.5 "Public Sans", "Noto Sans JP", system-ui, sans-serif;
+      color: var(--muted);
+      margin: 0;
+    }
     .node span {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-size: 9px;
       font-weight: 800;
-      border-radius: 99px;
-      margin-top: 9px;
-      padding: 3px 7px;
+      line-height: 1;
+      border-radius: 0;
+      margin-top: 10px;
+      padding: 0;
       color: var(--accent);
-      background: var(--soft);
+      background: transparent;
+      letter-spacing: .02em;
     }
-    .agent { --accent: var(--agent); --soft: var(--agent-soft); }
+    .node span::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      background: var(--accent);
+    }
+    .agent { --accent: var(--teal); --soft: var(--teal-soft); }
     .chat { --accent: var(--chat); --soft: var(--chat-soft); }
-    .future { --accent: var(--future); --soft: var(--future-soft); border-style: dashed; }
+    .future { --accent: var(--amber); --soft: var(--amber-soft); border-style: dashed; }
     .none { --accent: var(--neutral); --soft: var(--neutral-soft); }
     .flow-board > svg { position: absolute; inset: 0; }
     .wire { fill: none; stroke: var(--line); stroke-width: 2; marker-end: url(#a); }
@@ -480,7 +552,7 @@
       width: min(900px, 90%);
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 4px;
       padding: 28px;
       box-shadow: var(--shadow);
     }
@@ -495,16 +567,16 @@
       min-height: 405px;
       margin-top: 20px;
       overflow: hidden;
-      color: #1f2933;
-      background: #f7f8fa;
-      border: 1px solid #e1e5e9;
-      border-radius: 15px;
-      box-shadow: 0 6px 18px #26313b12;
+      color: var(--ink);
+      background: #f7f8f9;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: var(--shadow);
     }
     .ui-sidebar {
       padding: 18px 14px;
-      background: #fff;
-      border-right: 1px solid #e5e8ec;
+      background: var(--card);
+      border-right: 1px solid var(--border);
     }
     .ui-brand { display: flex; align-items: center; gap: 9px; margin: 1px 5px 24px; }
     .ui-logo {
@@ -512,18 +584,18 @@
       width: 30px;
       height: 30px;
       place-items: center;
-      border-radius: 8px;
+      border-radius: 4px;
       color: #fff;
-      background: #3d4b59;
+      background: var(--teal);
       font-size: 10px;
       font-weight: 800;
       letter-spacing: .04em;
     }
-    .ui-brand strong { display: block; color: #25313b; font-size: 12px; }
-    .ui-brand small { display: block; margin-top: 2px; color: #8b949d; font-size: 9px; }
+    .ui-brand strong { display: block; color: var(--ink); font: 700 12px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-brand small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
     .ui-section-label {
       margin: 0 7px 8px;
-      color: #9aa2aa;
+      color: #7c8790;
       font-size: 9px;
       font-weight: 800;
       letter-spacing: .12em;
@@ -534,108 +606,110 @@
       align-items: flex-start;
       gap: 9px;
       padding: 9px 8px;
-      color: #68737e;
-      border-radius: 8px;
+      color: var(--muted);
+      border-radius: 4px;
       text-decoration: none;
+      transition: background .1s ease-out;
     }
-    .ui-source.active { color: #25313b; background: #eef2f5; }
+    .ui-source:hover { background: #f0f3f4; }
+    .ui-source.active { color: var(--ink); background: var(--teal-soft); }
     .ui-source-mark {
       width: 7px;
       height: 7px;
       flex: 0 0 auto;
       margin-top: 4px;
       border: 1px solid #aeb7bf;
-      border-radius: 50%;
     }
-    .ui-source.active .ui-source-mark { border-color: #526272; background: #526272; }
+    .ui-source.active .ui-source-mark { border-color: var(--teal); background: var(--teal); }
     .ui-source b { display: block; font-size: 10px; font-weight: 700; }
     .ui-source small { display: block; margin-top: 3px; color: #9aa2aa; font-size: 9px; }
     .ui-sidebar-footer {
       margin-top: 24px;
       padding: 14px 7px 0;
-      border-top: 1px solid #edf0f2;
+      border-top: 1px solid var(--border);
     }
     .ui-sidebar-footer span { display: block; color: #9aa2aa; font-size: 9px; }
-    .ui-sidebar-footer b { display: block; margin-top: 5px; color: #526272; font-size: 10px; }
-    .ui-sidebar-footer small { display: block; margin-top: 3px; color: #aeb6bd; font-size: 9px; }
-    .ui-main { min-width: 0; padding: 23px 24px 20px; background: #f7f8fa; }
+    .ui-sidebar-footer b { display: block; margin-top: 5px; color: var(--ink); font: 700 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-sidebar-footer small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .ui-main { min-width: 0; padding: 23px 24px 20px; background: #f7f8f9; }
     .ui-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-    .ui-eyebrow { color: #99a1a9; font-size: 8px; font-weight: 800; letter-spacing: .13em; }
-    .ui-main h3 { margin: 5px 0 3px; color: #25313b; font-size: 17px; letter-spacing: -.02em; }
-    .ui-main p { margin: 0; color: #8a949d; font-size: 10px; }
+    .ui-eyebrow { color: var(--teal); font: 700 8px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: .13em; }
+    .ui-main h3 { margin: 5px 0 3px; color: var(--ink); font: 700 17px/1.25 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: -.02em; }
+    .ui-main p { margin: 0; color: var(--muted); font: 10px/1.5 "Public Sans", "Noto Sans JP", system-ui, sans-serif; }
     .ui-filter {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       flex: 0 0 auto;
       padding: 7px 9px;
-      color: #64707b;
-      background: #fff;
-      border: 1px solid #dfe4e8;
-      border-radius: 7px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
       font-size: 10px;
       font-weight: 700;
+      font-family: "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
     }
     .ui-filter-caret {
       width: 6px;
       height: 6px;
-      border-right: 1px solid #7c8791;
-      border-bottom: 1px solid #7c8791;
+      border-right: 1px solid var(--muted);
+      border-bottom: 1px solid var(--muted);
       transform: rotate(45deg) translateY(-2px);
     }
     .ui-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
-    .ui-kpi { padding: 13px 14px 12px; background: #fff; border: 1px solid #e1e5e9; border-radius: 10px; }
+    .ui-kpi { padding: 13px 14px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
     .ui-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .ui-kpi-label { color: #69757f; font-size: 9px; font-weight: 700; }
-    .ui-kpi-note { color: #9da5ac; font-size: 8px; white-space: nowrap; }
-    .ui-kpi strong { display: block; margin-top: 8px; color: #27343e; font-size: 23px; letter-spacing: -.05em; }
-    .ui-kpi strong small { margin-left: 3px; color: #82909b; font-size: 10px; font-weight: 500; letter-spacing: 0; }
-    .ui-kpi-line { height: 4px; margin-top: 10px; overflow: hidden; background: #edf0f2; border-radius: 99px; }
-    .ui-kpi-line i { display: block; width: 68%; height: 100%; background: #6b7c8c; border-radius: inherit; }
-    .ui-kpi:nth-child(2) .ui-kpi-line i { width: 52%; background: #8998a5; }
-    .ui-kpi:nth-child(3) .ui-kpi-line i { width: 84%; background: #526272; }
+    .ui-kpi-label { color: var(--muted); font: 600 9px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-kpi-note { color: #7c8790; font: 8px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; white-space: nowrap; }
+    .ui-kpi strong { display: block; margin-top: 8px; color: var(--ink); font: 700 23px/1 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: -.05em; }
+    .ui-kpi strong small { margin-left: 3px; color: var(--muted); font: 500 10px/1 "Public Sans", "Noto Sans JP", system-ui, sans-serif; letter-spacing: 0; }
+    .ui-kpi-line { height: 4px; margin-top: 10px; overflow: hidden; background: #e5e8eb; border-radius: 2px; }
+    .ui-kpi-line i { display: block; width: 68%; height: 100%; background: var(--teal); border-radius: inherit; }
+    .ui-kpi:nth-child(2) .ui-kpi-line i { width: 52%; background: #6d858d; }
+    .ui-kpi:nth-child(3) .ui-kpi-line i { width: 84%; background: var(--amber); }
     .ui-panels { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(150px, .75fr); gap: 10px; margin-top: 10px; }
-    .ui-panel { min-width: 0; padding: 13px 14px; background: #fff; border: 1px solid #e1e5e9; border-radius: 10px; }
-    .ui-panel h4 { margin: 0 0 11px; color: #52606b; font-size: 10px; }
+    .ui-panel { min-width: 0; padding: 13px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
+    .ui-panel h4 { margin: 0 0 11px; color: var(--ink); font: 700 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
     .ui-activity { display: grid; gap: 8px; }
     .ui-activity-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
-    .ui-activity-row b { overflow: hidden; color: #4c5964; font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-    .ui-activity-row small { color: #9ba4ac; font-size: 8px; }
-    .ui-activity-bar { height: 4px; margin-top: 4px; overflow: hidden; background: #eef1f3; border-radius: 99px; }
-    .ui-activity-bar i { display: block; width: 74%; height: 100%; background: #9aa8b4; border-radius: inherit; }
+    .ui-activity-row b { overflow: hidden; color: var(--ink); font: 600 9px/1.3 "Public Sans", "Noto Sans JP", system-ui, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+    .ui-activity-row small { color: var(--muted); font: 8px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-activity-bar { height: 4px; margin-top: 4px; overflow: hidden; background: #e9ecee; border-radius: 2px; }
+    .ui-activity-bar i { display: block; width: 74%; height: 100%; background: var(--teal); border-radius: inherit; }
     .ui-activity-row:nth-child(2) .ui-activity-bar i { width: 49%; }
-    .ui-activity-row:nth-child(3) .ui-activity-bar i { width: 88%; background: #667888; }
+    .ui-activity-row:nth-child(3) .ui-activity-bar i { width: 88%; background: var(--amber); }
     .ui-status-list { display: grid; gap: 10px; }
     .ui-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .ui-status span { color: #76818a; font-size: 9px; }
-    .ui-status b { color: #44515d; font-size: 10px; }
-    .ui-status b:before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 5px 1px 0; border-radius: 50%; background: #8aa18d; }
-    .ui-status:nth-child(2) b:before { background: #c0a36d; }
-    .ui-status:nth-child(3) b:before { background: #9ca7af; }
+    .ui-status span { color: var(--muted); font-size: 9px; }
+    .ui-status b { color: var(--ink); font: 600 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-status b:before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 5px 1px 0; background: var(--teal); }
+    .ui-status:nth-child(2) b:before { background: var(--amber); }
+    .ui-status:nth-child(3) b:before { background: #87919a; }
 
     /* Data preview: request paths keep the same card-and-wire language as the workflow. */
     .flow-card {
       margin-top: 20px;
       overflow-x: auto;
-      background: #fff;
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 15px;
+      border-radius: 4px;
     }
     .flow-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 17px 18px 0; }
-    .flow-eyebrow { color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .14em; }
+    .flow-eyebrow { color: var(--teal); font-size: 8px; font-weight: 800; letter-spacing: .14em; }
     .flow-header h3 { margin: 5px 0 0; font-size: 14px; }
     .flow-legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; color: var(--muted); font-size: 9px; }
     .flow-legend span { white-space: nowrap; }
-    .legend-dot { display: inline-block; width: 7px; height: 7px; margin-right: 4px; border-radius: 50%; background: var(--neutral); }
-    .legend-dot.api { background: var(--agent); }
+    .legend-dot { display: inline-block; width: 7px; height: 7px; margin-right: 4px; background: var(--neutral); }
+    .legend-dot.api { background: var(--teal); }
     .legend-dot.session { background: var(--chat); }
     .flow-board { position: relative; width: 820px; height: 360px; }
     .flow-board svg { width: 820px; height: 360px; }
-    .data-wire { stroke: #9aa1a8; marker-end: url(#dataArrow); }
+    .data-wire { stroke: var(--line); marker-end: url(#dataArrow); }
     .flow-column-label {
       position: absolute;
       top: 15px;
-      color: #b0b5ba;
+      color: #7c8790;
       font-size: 8px;
       font-weight: 800;
       letter-spacing: .13em;
@@ -643,8 +717,8 @@
     .flow-column-label.client { left: 28px; }
     .flow-column-label.endpoint { left: 240px; }
     .flow-column-label.storage { left: 610px; }
-    .data-node { width: 164px; padding: 15px 13px 12px; border-radius: 13px; }
-    .data-node h3 { font-size: 11px; margin-top: 2px; }
+    .data-node { width: 164px; padding: 11px 12px 10px; border-radius: 4px; }
+    .data-node h3 { font-size: 11px; margin-top: 8px; }
     .data-node p { font-size: 9px; }
     .data-node span { margin-top: 8px; font-size: 8px; }
     .browser-node { left: 18px; top: 137px; }
@@ -654,7 +728,14 @@
     .database-node { left: 600px; top: 72px; }
     .object-node { left: 600px; top: 202px; }
     .flow-footer { display: flex; align-items: center; gap: 8px; padding: 0 18px 16px; color: var(--muted); font-size: 9px; }
-    .flow-footer code { padding: 3px 6px; color: #59636d; background: #f3f4f5; border-radius: 5px; font: 9px ui-monospace, SFMono-Regular, monospace; }
+    .flow-footer code { padding: 3px 6px; color: var(--ink); background: var(--neutral-soft); border: 1px solid var(--border); border-radius: 2px; font: 9px "JetBrains Mono", ui-monospace, monospace; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
 
     @media (max-width: 760px) {
       .mast { height: 72px; padding: 14px 16px; }
@@ -710,30 +791,30 @@
           <div class="workflow-canvas" id="workflowCanvas">
             <div class="note"><b id="noteTitle">aikensyu のワークフロー</b><small>業務とAI機能の接点を編集するビュー</small></div>
             <div class="workflow-mode" id="workflowMode">編集モード</div>
-            <button class="add-node" id="addNode" type="button">＋ノードを追加</button>
+            <button class="add-node" id="addNode" type="button">ノードを追加</button>
             <div class="group" style="left:20px;top:105px;width:405px;height:390px"><label>CONTENT PREPARATION</label></div>
             <div class="group" style="left:425px;top:105px;width:425px;height:390px"><label>LEARNING &amp; REVIEW</label></div>
             <svg width="860" height="620" viewBox="0 0 860 620" aria-hidden="true">
-              <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#918b80" /></marker></defs>
+              <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a" /></marker></defs>
               <path class="wire" d="M225 205 C248 205 235 350 250 350" />
               <path class="wire" d="M420 350 C445 350 442 205 460 205" />
               <path class="wire" d="M630 205 C655 205 655 350 680 350" />
             </svg>
             <article class="node agent workflow-node selected" data-node="資料を解析" style="left:55px;top:150px">
               <div class="node-actions" aria-label="資料を解析の操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div>
-              <h3>資料を解析</h3><p>教材候補と学習目標を抽出</p><span>AIエージェント</span>
+              <small class="node-id" aria-hidden="true">N01</small><h3>資料を解析</h3><p>教材候補と学習目標を抽出</p><span>[AGENT]</span>
             </article>
             <article class="node future workflow-node" data-node="内容をレビュー" style="left:250px;top:295px">
               <div class="node-actions" aria-label="内容をレビューの操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div>
-              <h3>内容をレビュー</h3><p>担当者が構成を確認</p><span>構想・未実装</span>
+              <small class="node-id" aria-hidden="true">N02</small><h3>内容をレビュー</h3><p>担当者が構成を確認</p><span>[TBD]</span>
             </article>
             <article class="node chat workflow-node" data-node="対話型研修" style="left:460px;top:150px">
               <div class="node-actions" aria-label="対話型研修の操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div>
-              <h3>対話型研修</h3><p>受講者の回答に応じて進行</p><span>AIチャット</span>
+              <small class="node-id" aria-hidden="true">N03</small><h3>対話型研修</h3><p>受講者の回答に応じて進行</p><span>[CHAT]</span>
             </article>
             <article class="node agent workflow-node" data-node="レポート生成" style="left:680px;top:295px">
               <div class="node-actions" aria-label="レポート生成の操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div>
-              <h3>レポート生成</h3><p>結果と改善点をまとめる</p><span>AIエージェント</span>
+              <small class="node-id" aria-hidden="true">N04</small><h3>レポート生成</h3><p>結果と改善点をまとめる</p><span>[AGENT]</span>
             </article>
           </div>
           <aside class="workflow-editor" id="nodeEditor" aria-label="ノード編集パネル" aria-hidden="true">
@@ -800,7 +881,7 @@
         <div class="flow-board" aria-label="ブラウザからAPIエンドポイントを経由して保存先へ至るデータフロー">
           <span class="flow-column-label client">CLIENT</span><span class="flow-column-label endpoint">API ENDPOINTS</span><span class="flow-column-label storage">PERSISTENCE</span>
           <svg width="820" height="360" viewBox="0 0 820 360" aria-hidden="true">
-            <defs><marker id="dataArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#9aa1a8" /></marker></defs>
+            <defs><marker id="dataArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a" /></marker></defs>
             <path class="wire data-wire" d="M182 190 C202 190 207 70 230 70" />
             <path class="wire data-wire" d="M182 190 C205 190 207 178 230 178" />
             <path class="wire data-wire" d="M182 190 C202 190 207 286 230 286" />
@@ -809,12 +890,12 @@
             <path class="wire data-wire" d="M394 178 C470 178 520 252 600 252" />
             <path class="wire data-wire" d="M394 286 C470 286 520 252 600 252" />
           </svg>
-          <article class="node none data-node browser-node"><h3>ブラウザ</h3><p>受講者の入力と画面表示</p><span>CLIENT</span></article>
-          <article class="node agent data-node course-api"><h3>GET /api/courses</h3><p>コースと教材の一覧を取得</p><span>API</span></article>
-          <article class="node chat data-node session-api"><h3>POST /api/session</h3><p>回答をAI対話へ送信</p><span>AI CHAT</span></article>
-          <article class="node agent data-node report-api"><h3>POST /api/reports</h3><p>学習結果のレポートを生成</p><span>AI AGENT</span></article>
-          <article class="node none data-node database-node"><h3>PostgreSQL</h3><p>コース・受講者・回答</p><span>DATABASE</span></article>
-          <article class="node none data-node object-node"><h3>Object Storage</h3><p>教材ファイルと生成レポート</p><span>FILES</span></article>
+          <article class="node none data-node browser-node"><small class="node-id" aria-hidden="true">N01</small><h3>ブラウザ</h3><p>受講者の入力と画面表示</p><span>[CLIENT]</span></article>
+          <article class="node agent data-node course-api"><small class="node-id" aria-hidden="true">N02</small><h3>GET /api/courses</h3><p>コースと教材の一覧を取得</p><span>[API]</span></article>
+          <article class="node chat data-node session-api"><small class="node-id" aria-hidden="true">N03</small><h3>POST /api/session</h3><p>回答をAI対話へ送信</p><span>[CHAT]</span></article>
+          <article class="node agent data-node report-api"><small class="node-id" aria-hidden="true">N04</small><h3>POST /api/reports</h3><p>学習結果のレポートを生成</p><span>[AGENT]</span></article>
+          <article class="node none data-node database-node"><small class="node-id" aria-hidden="true">N05</small><h3>PostgreSQL</h3><p>コース・受講者・回答</p><span>[DATABASE]</span></article>
+          <article class="node none data-node object-node"><small class="node-id" aria-hidden="true">N06</small><h3>Object Storage</h3><p>教材ファイルと生成レポート</p><span>[FILES]</span></article>
         </div>
         <div class="flow-footer"><span>主要な呼び出し:</span><code>browser → API → storage</code></div>
       </div>
@@ -847,6 +928,13 @@
       none: 'AI不使用',
       future: '構想未実装'
     };
+    const typeShortLabels = {
+      agent: '[AGENT]',
+      chat: '[CHAT]',
+      none: '[NONE]',
+      future: '[TBD]'
+    };
+    let viewSwapTimer = null;
 
     function selectNode(node) {
       if (!node) return;
@@ -858,6 +946,8 @@
       nodeType.value = [...node.classList].find(x => typeLabels[x]) || 'none';
       editorStatus.textContent = '選択中';
       nodeEditor.setAttribute('aria-hidden', 'false');
+      nodeEditor.classList.remove('is-switching');
+      requestAnimationFrame(() => nodeEditor.classList.add('is-switching'));
     }
 
     function bindNode(node) {
@@ -897,11 +987,33 @@
       });
     });
 
-    tabs.forEach(button => button.addEventListener('click', () => {
-      view = button.dataset.view;
-      tabs.forEach(x => x.classList.toggle('active', x === button));
-      views.forEach(x => x.classList.toggle('hidden', x.id !== view));
-    }));
+    function switchView(nextView) {
+      if (nextView === view) return;
+      const nextViewEl = document.getElementById(nextView);
+      const currentViewEl = [...views].find(x => !x.classList.contains('hidden'));
+      view = nextView;
+      tabs.forEach(x => x.classList.toggle('active', x.dataset.view === nextView));
+      if (viewSwapTimer) window.clearTimeout(viewSwapTimer);
+      views.forEach(x => {
+        if (x !== currentViewEl && x !== nextViewEl) {
+          x.classList.add('hidden');
+          x.classList.remove('is-entering', 'is-leaving');
+        }
+      });
+      if (currentViewEl && currentViewEl !== nextViewEl) {
+        currentViewEl.classList.remove('is-entering');
+        currentViewEl.classList.add('is-leaving');
+        viewSwapTimer = window.setTimeout(() => {
+          currentViewEl.classList.add('hidden');
+          currentViewEl.classList.remove('is-leaving');
+        }, 180);
+      }
+      nextViewEl.classList.remove('hidden', 'is-leaving');
+      requestAnimationFrame(() => nextViewEl.classList.add('is-entering'));
+      window.setTimeout(() => nextViewEl.classList.remove('is-entering'), 200);
+    }
+
+    tabs.forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
     editToggle.addEventListener('click', () => {
       editing = !editing;
@@ -924,7 +1036,7 @@
       node.dataset.node = '新しいノード';
       node.style.left = `${70 + (addedNodes - 1) % 3 * 190}px`;
       node.style.top = `${505 + Math.floor((addedNodes - 1) / 3) * 125}px`;
-      node.innerHTML = '<div class="node-actions" aria-label="新しいノードの操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><h3>新しいノード</h3><p>追加したステップの説明</p><span>AI不使用</span>';
+      node.innerHTML = `<div class="node-actions" aria-label="新しいノードの操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><small class="node-id" aria-hidden="true">N${String(4 + addedNodes).padStart(2, '0')}</small><h3>新しいノード</h3><p>追加したステップの説明</p><span>${typeShortLabels.none}</span>`;
       workflowCanvas.append(node);
       bindNode(node);
       selectNode(node);
@@ -937,7 +1049,7 @@
       const description = nodeDescription.value.trim() || '説明未設定';
       selectedNode.querySelector('h3').textContent = title;
       selectedNode.querySelector('p').textContent = description;
-      selectedNode.querySelector('span').textContent = typeLabels[nodeType.value];
+      selectedNode.querySelector('span').textContent = typeShortLabels[nodeType.value];
       selectedNode.classList.remove('agent', 'chat', 'none', 'future');
       selectedNode.classList.add(nodeType.value);
       editorNodeName.textContent = title;
