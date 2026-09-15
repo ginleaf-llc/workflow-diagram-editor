@@ -217,6 +217,7 @@
       cursor: pointer;
     }
     .tools .primary { color: white; background: var(--teal); border-color: var(--teal); }
+    .tools button:disabled { cursor: not-allowed; opacity: .52; }
 
     .stage {
       min-height: 0;
@@ -321,6 +322,18 @@
     }
     .node:hover { border-color: var(--teal); transform: translateY(-1px); }
     .board.editing .node { cursor: pointer; }
+    .workflow-node {
+      user-select: none;
+      touch-action: none;
+    }
+    .board.editing .workflow-node { cursor: grab; }
+    .board.editing .workflow-node.dragging {
+      z-index: 5;
+      cursor: grabbing;
+      transform: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, .1), 0 16px 32px -8px rgba(0, 0, 0, .22);
+      transition: none;
+    }
     .board.editing .node:hover,
     .board.editing .node.selected {
       border-color: var(--teal);
@@ -400,6 +413,12 @@
       visibility: visible;
       opacity: 1;
       transform: translateX(0);
+    }
+    .workflow-editor[aria-hidden="true"] {
+      visibility: hidden;
+      opacity: 0;
+      transform: translateX(16px);
+      pointer-events: none;
     }
     .workflow-editor.is-switching { animation: editor-switch .2s ease-out both; }
     @keyframes editor-switch {
@@ -559,6 +578,35 @@
     .other h2 { margin: 0 0 6px; }
     .other > p { color: var(--muted); }
     .hidden { display: none; }
+
+    .empty-state {
+      display: grid;
+      min-height: 260px;
+      place-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 32px;
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: var(--shadow);
+    }
+    .empty-state .empty-kicker {
+      color: var(--amber);
+      font: 800 9px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+      letter-spacing: .14em;
+    }
+    .empty-state h3 { margin: 0; font-size: 14px; }
+    .empty-state p { margin: 0; color: var(--muted); font-size: 11px; }
+    .workflow-canvas .empty-state {
+      position: absolute;
+      top: 105px;
+      left: 20px;
+      width: 820px;
+      min-height: 360px;
+      margin: 0;
+    }
 
     /* UI preview: a neutral product surface inside the architecture shell. */
     .ui-preview {
@@ -783,46 +831,25 @@
         <button class="tab" data-view="ui">アプリのUI</button>
         <button class="tab" data-view="data">データフロー</button>
         <button class="tab active" data-view="workflow">ワークフロー</button>
-        <div class="tools"><button>共有</button><button class="primary" id="editToggle" aria-pressed="false">編集する</button></div>
+        <div class="tools"><button>共有</button><button class="primary" id="editToggle" aria-pressed="false">編集する</button><button id="resetWorkflow" type="button">リセット</button></div>
       </nav>
 
-      <main class="stage">
+        <main class="stage">
         <section id="workflow" class="view board">
           <div class="workflow-canvas" id="workflowCanvas">
-            <div class="note"><b id="noteTitle">aikensyu のワークフロー</b><small>業務とAI機能の接点を編集するビュー</small></div>
+            <div class="note"><b id="noteTitle">aikensyu のワークフロー</b><small id="noteDescription">業務とAI機能の接点を編集するビュー</small></div>
             <div class="workflow-mode" id="workflowMode">編集モード</div>
             <button class="add-node" id="addNode" type="button">ノードを追加</button>
-            <div class="group" style="left:20px;top:105px;width:405px;height:390px"><label>CONTENT PREPARATION</label></div>
-            <div class="group" style="left:425px;top:105px;width:425px;height:390px"><label>LEARNING &amp; REVIEW</label></div>
-            <svg width="860" height="620" viewBox="0 0 860 620" aria-hidden="true">
-              <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a" /></marker></defs>
-              <path class="wire" d="M225 205 C248 205 235 350 250 350" />
-              <path class="wire" d="M420 350 C445 350 442 205 460 205" />
-              <path class="wire" d="M630 205 C655 205 655 350 680 350" />
-            </svg>
-            <article class="node agent workflow-node selected" data-node="資料を解析" style="left:55px;top:150px">
-              <div class="node-actions" aria-label="資料を解析の操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div>
-              <small class="node-id" aria-hidden="true">N01</small><h3>資料を解析</h3><p>教材候補と学習目標を抽出</p><span>[AGENT]</span>
-            </article>
-            <article class="node future workflow-node" data-node="内容をレビュー" style="left:250px;top:295px">
-              <div class="node-actions" aria-label="内容をレビューの操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div>
-              <small class="node-id" aria-hidden="true">N02</small><h3>内容をレビュー</h3><p>担当者が構成を確認</p><span>[TBD]</span>
-            </article>
-            <article class="node chat workflow-node" data-node="対話型研修" style="left:460px;top:150px">
-              <div class="node-actions" aria-label="対話型研修の操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div>
-              <small class="node-id" aria-hidden="true">N03</small><h3>対話型研修</h3><p>受講者の回答に応じて進行</p><span>[CHAT]</span>
-            </article>
-            <article class="node agent workflow-node" data-node="レポート生成" style="left:680px;top:295px">
-              <div class="node-actions" aria-label="レポート生成の操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div>
-              <small class="node-id" aria-hidden="true">N04</small><h3>レポート生成</h3><p>結果と改善点をまとめる</p><span>[AGENT]</span>
-            </article>
+            <div id="workflowGroups"></div>
+            <svg id="workflowWires" width="860" height="620" viewBox="0 0 860 620" aria-hidden="true"></svg>
+            <div id="workflowNodes"></div>
           </div>
           <aside class="workflow-editor" id="nodeEditor" aria-label="ノード編集パネル" aria-hidden="true">
-            <div class="editor-header"><div><span class="editor-kicker">NODE EDITOR</span><h2 id="editorNodeName">資料を解析</h2></div><span class="editor-status" id="editorStatus">選択中</span></div>
+            <div class="editor-header"><div><span class="editor-kicker">NODE EDITOR</span><h2 id="editorNodeName"></h2></div><span class="editor-status" id="editorStatus">選択中</span></div>
             <form class="editor-form" id="nodeForm">
-              <div class="editor-field"><label for="nodeTitle">タイトル</label><input id="nodeTitle" type="text" value="資料を解析"></div>
-              <div class="editor-field"><label for="nodeDescription">説明</label><textarea id="nodeDescription">教材候補と学習目標を抽出</textarea></div>
-              <div class="editor-field"><label for="nodeType">種別</label><select id="nodeType"><option value="agent" selected>AIエージェント</option><option value="chat">AIチャット</option><option value="none">AI不使用</option><option value="future">構想未実装</option></select></div>
+              <div class="editor-field"><label for="nodeTitle">タイトル</label><input id="nodeTitle" type="text"></div>
+              <div class="editor-field"><label for="nodeDescription">説明</label><textarea id="nodeDescription"></textarea></div>
+              <div class="editor-field"><label for="nodeType">種別</label><select id="nodeType"><option value="agent">AIエージェント</option><option value="chat">AIチャット</option><option value="none">AI不使用</option><option value="future">構想未実装</option></select></div>
               <div class="editor-actions"><button id="cancelNode" type="button">キャンセル</button><button class="save" id="saveNode" type="submit">変更を保存</button></div>
             </form>
             <p class="editor-hint">ノードを選択して、役割と説明を調整できます。配線は既存のフローを保ったまま確認できます。</p>
@@ -831,90 +858,218 @@
 
     <section id="ui" class="view other hidden">
       <h2>アプリのUI</h2>
-      <p>選択アプリの主要画面を、実際のダッシュボードに近い構成で確認するビューです。</p>
-      <div class="ui-preview" aria-label="aikensyu のダッシュボードプレビュー">
-        <aside class="ui-sidebar">
-          <div class="ui-brand">
-            <span class="ui-logo">AK</span>
-            <div><strong>aikensyu</strong><small>Learning workspace</small></div>
-          </div>
-          <div class="ui-section-label">SOURCES</div>
-          <nav class="ui-source-nav" aria-label="ソース一覧">
-            <a class="ui-source active" href="#ui"><span class="ui-source-mark"></span><span><b>研修コース</b><small>12 sources</small></span></a>
-            <a class="ui-source" href="#ui"><span class="ui-source-mark"></span><span><b>教材ライブラリ</b><small>34 documents</small></span></a>
-            <a class="ui-source" href="#ui"><span class="ui-source-mark"></span><span><b>受講者データ</b><small>428 learners</small></span></a>
-            <a class="ui-source" href="#ui"><span class="ui-source-mark"></span><span><b>レポート</b><small>8 saved views</small></span></a>
-          </nav>
-          <div class="ui-sidebar-footer"><span>WORKSPACE</span><b>AI training hub</b><small>Updated 4 min ago</small></div>
-        </aside>
-        <div class="ui-main">
-          <div class="ui-header">
-            <div><span class="ui-eyebrow">OVERVIEW / AI TRAINING</span><h3>研修コンテンツの状況</h3><p>チーム全体の作成状況と受講状況を確認できます。</p></div>
-            <button class="ui-filter">今週<span class="ui-filter-caret" aria-hidden="true"></span></button>
-          </div>
-          <div class="ui-kpis">
-            <div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">公開中の教材</span><span class="ui-kpi-note">+2 this week</span></div><strong>24<small>件</small></strong><div class="ui-kpi-line"><i></i></div></div>
-            <div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">今週の受講者</span><span class="ui-kpi-note">+18.4%</span></div><strong>428<small>人</small></strong><div class="ui-kpi-line"><i></i></div></div>
-            <div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">平均完了率</span><span class="ui-kpi-note">target 80%</span></div><strong>84<small>%</small></strong><div class="ui-kpi-line"><i></i></div></div>
-          </div>
-          <div class="ui-panels">
-            <section class="ui-panel"><h4>最近のコンテンツ</h4><div class="ui-activity">
-              <div class="ui-activity-row"><div><b>新人向け AI 基礎研修</b><div class="ui-activity-bar"><i></i></div></div><small>公開中</small></div>
-              <div class="ui-activity-row"><div><b>情報セキュリティ 2026</b><div class="ui-activity-bar"><i></i></div></div><small>レビュー中</small></div>
-              <div class="ui-activity-row"><div><b>営業チーム向けケース演習</b><div class="ui-activity-bar"><i></i></div></div><small>下書き</small></div>
-            </div></section>
-            <section class="ui-panel"><h4>運用ステータス</h4><div class="ui-status-list">
-              <div class="ui-status"><span>教材同期</span><b>正常</b></div>
-              <div class="ui-status"><span>AI評価キュー</span><b>処理中</b></div>
-              <div class="ui-status"><span>データ連携</span><b>待機中</b></div>
-            </div></section>
-          </div>
-        </div>
-      </div>
+      <p id="uiDescription">選択アプリの主要画面を、実際のダッシュボードに近い構成で確認するビューです。</p>
+      <div id="uiContent"></div>
     </section>
 
     <section id="data" class="view other hidden">
       <h2>データフロー</h2>
-      <p>選択アプリ内外のデータの流れと責任境界を、リクエスト単位で確認するビューです。</p>
-      <div class="flow-card">
-        <div class="flow-header"><div><span class="flow-eyebrow">REQUEST PATH</span><h3>ブラウザから保存まで</h3></div><div class="flow-legend"><span><i class="legend-dot"></i>クライアント</span><span><i class="legend-dot api"></i>API</span><span><i class="legend-dot session"></i>AI連携</span></div></div>
-        <div class="flow-board" aria-label="ブラウザからAPIエンドポイントを経由して保存先へ至るデータフロー">
-          <span class="flow-column-label client">CLIENT</span><span class="flow-column-label endpoint">API ENDPOINTS</span><span class="flow-column-label storage">PERSISTENCE</span>
-          <svg width="820" height="360" viewBox="0 0 820 360" aria-hidden="true">
-            <defs><marker id="dataArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a" /></marker></defs>
-            <path class="wire data-wire" d="M182 190 C202 190 207 70 230 70" />
-            <path class="wire data-wire" d="M182 190 C205 190 207 178 230 178" />
-            <path class="wire data-wire" d="M182 190 C202 190 207 286 230 286" />
-            <path class="wire data-wire" d="M394 70 C470 70 520 122 600 122" />
-            <path class="wire data-wire" d="M394 178 C470 178 520 122 600 122" />
-            <path class="wire data-wire" d="M394 178 C470 178 520 252 600 252" />
-            <path class="wire data-wire" d="M394 286 C470 286 520 252 600 252" />
-          </svg>
-          <article class="node none data-node browser-node"><small class="node-id" aria-hidden="true">N01</small><h3>ブラウザ</h3><p>受講者の入力と画面表示</p><span>[CLIENT]</span></article>
-          <article class="node agent data-node course-api"><small class="node-id" aria-hidden="true">N02</small><h3>GET /api/courses</h3><p>コースと教材の一覧を取得</p><span>[API]</span></article>
-          <article class="node chat data-node session-api"><small class="node-id" aria-hidden="true">N03</small><h3>POST /api/session</h3><p>回答をAI対話へ送信</p><span>[CHAT]</span></article>
-          <article class="node agent data-node report-api"><small class="node-id" aria-hidden="true">N04</small><h3>POST /api/reports</h3><p>学習結果のレポートを生成</p><span>[AGENT]</span></article>
-          <article class="node none data-node database-node"><small class="node-id" aria-hidden="true">N05</small><h3>PostgreSQL</h3><p>コース・受講者・回答</p><span>[DATABASE]</span></article>
-          <article class="node none data-node object-node"><small class="node-id" aria-hidden="true">N06</small><h3>Object Storage</h3><p>教材ファイルと生成レポート</p><span>[FILES]</span></article>
-        </div>
-        <div class="flow-footer"><span>主要な呼び出し:</span><code>browser → API → storage</code></div>
-      </div>
+      <p id="dataDescription">選択アプリ内外のデータの流れと責任境界を、リクエスト単位で確認するビューです。</p>
+      <div id="dataContent"></div>
     </section>
   </main>
     </div>
   </div>
 
   <script>
-    let app = 'aikensyu', view = 'workflow', editing = false, selectedNode = null, addedNodes = 0;
+    const KINDS = ['agent', 'chat', 'none', 'future'];
+    const TYPE_SHORT_LABELS = {
+      agent: '[AGENT]',
+      chat: '[CHAT]',
+      none: '[NONE]',
+      future: '[TBD]'
+    };
+    const WORKFLOW_STORAGE_PREFIX = 'workflow-editor:';
+
+    const APP_DATA = {
+      aikensyu: {
+        workflow: {
+          note: '業務とAI機能の接点を編集するビュー',
+          groups: [
+            { label: 'CONTENT PREPARATION', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'LEARNING & REVIEW', left: 425, top: 105, width: 425, height: 390 }
+          ],
+          nodes: [
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'agent', title: '資料を解析', description: '教材候補と学習目標を抽出' },
+            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'future', title: '内容をレビュー', description: '担当者が構成を確認' },
+            { id: 'n3', displayId: 'N03', x: 460, y: 150, kind: 'chat', title: '対話型研修', description: '受講者の回答に応じて進行' },
+            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'agent', title: 'レポート生成', description: '結果と改善点をまとめる' }
+          ],
+          wires: [
+            { id: 'w1', from: 'n1', to: 'n2' },
+            { id: 'w2', from: 'n2', to: 'n3' },
+            { id: 'w3', from: 'n3', to: 'n4' }
+          ],
+          nextId: 5
+        },
+        ui: {
+          initials: 'AK', brand: 'aikensyu', subtitle: 'Learning workspace', workspace: 'AI training hub', updated: 'Updated 4 min ago',
+          eyebrow: 'OVERVIEW / AI TRAINING', title: '研修コンテンツの状況', description: 'チーム全体の作成状況と受講状況を確認できます。', filter: '今週',
+          sources: [
+            { name: '研修コース', meta: '12 sources' }, { name: '教材ライブラリ', meta: '34 documents' },
+            { name: '受講者データ', meta: '428 learners' }, { name: 'レポート', meta: '8 saved views' }
+          ],
+          kpis: [
+            { label: '公開中の教材', note: '+2 this week', value: '24', unit: '件', progress: 68 },
+            { label: '今週の受講者', note: '+18.4%', value: '428', unit: '人', progress: 52, color: '#6d858d' },
+            { label: '平均完了率', note: 'target 80%', value: '84', unit: '%', progress: 84, color: '#b06a2c' }
+          ],
+          activities: [
+            { name: '新人向け AI 基礎研修', status: '公開中', progress: 74 },
+            { name: '情報セキュリティ 2026', status: 'レビュー中', progress: 49 },
+            { name: '営業チーム向けケース演習', status: '下書き', progress: 88, color: '#b06a2c' }
+          ],
+          statuses: [{ name: '教材同期', value: '正常' }, { name: 'AI評価キュー', value: '処理中' }, { name: 'データ連携', value: '待機中' }]
+        },
+        data: {
+          eyebrow: 'REQUEST PATH', title: 'ブラウザからレポート保存まで', footer: 'browser → API → storage', ariaLabel: 'ブラウザからAPIエンドポイントを経由して保存先へ至るデータフロー',
+          nodes: [
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'ブラウザ', description: '受講者の入力と画面表示', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'agent', label: '[API]', title: 'GET /api/courses', description: 'コースと教材の一覧を取得', x: 230, y: 20 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/session', description: '回答をAI対話へ送信', x: 230, y: 128 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'agent', label: '[AGENT]', title: 'POST /api/reports', description: '学習結果のレポートを生成', x: 230, y: 236 },
+            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: 'コース・受講者・回答', x: 600, y: 72 },
+            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[FILES]', title: 'Object Storage', description: '教材ファイルと生成レポート', x: 600, y: 202 }
+          ],
+          wires: [
+            { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' },
+            { from: 'd2', to: 'd5' }, { from: 'd3', to: 'd5' }, { from: 'd3', to: 'd6' }, { from: 'd4', to: 'd6' }
+          ]
+        }
+      },
+      'web-service-ginleaf': {
+        workflow: {
+          note: 'Web基盤のリクエスト処理と運用接点を編集するビュー',
+          groups: [
+            { label: 'REQUEST & VALIDATION', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'SERVICE & PERSISTENCE', left: 425, top: 105, width: 425, height: 390 }
+          ],
+          nodes: [
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'リクエストを受信', description: 'ブラウザからの入力を受け付ける' },
+            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'agent', title: '認証を確認', description: 'セッションと権限を検証する' },
+            { id: 'n3', displayId: 'N03', x: 445, y: 150, kind: 'none', title: 'APIを実行', description: 'ルートに応じた処理を呼び出す' },
+            { id: 'n4', displayId: 'N04', x: 635, y: 295, kind: 'none', title: 'データを更新', description: '永続化層へ結果を書き込む' },
+            { id: 'n5', displayId: 'N05', x: 650, y: 150, kind: 'agent', title: 'レスポンスを返す', description: '画面に表示する形式へ整える' }
+          ],
+          wires: [
+            { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n2', to: 'n3' },
+            { id: 'w3', from: 'n3', to: 'n4' }, { id: 'w4', from: 'n4', to: 'n5' }
+          ],
+          nextId: 6
+        },
+        ui: {
+          initials: 'GS', brand: 'web-service-ginleaf', subtitle: 'Service operations', workspace: 'Ginleaf service', updated: 'Updated 11 min ago',
+          eyebrow: 'OVERVIEW / SERVICE OPS', title: 'Webサービスの稼働状況', description: 'APIの利用状況とデプロイ後の健全性を確認できます。', filter: '直近24時間',
+          sources: [
+            { name: 'API health', meta: '18 endpoints' }, { name: 'Deployments', meta: '6 releases' },
+            { name: 'Usage metrics', meta: '42 routes' }, { name: 'Error reports', meta: '3 saved views' }
+          ],
+          kpis: [
+            { label: '稼働中のAPI', note: '+3 this month', value: '18', unit: '本', progress: 76 },
+            { label: '平均応答時間', note: '-12 ms', value: '142', unit: 'ms', progress: 58, color: '#6d858d' },
+            { label: 'リクエスト成功率', note: 'target 99.5%', value: '99.8', unit: '%', progress: 92, color: '#b06a2c' }
+          ],
+          activities: [
+            { name: 'workflow API v2.4', status: '稼働中', progress: 86 },
+            { name: '認証サービスの更新', status: '監視中', progress: 61 },
+            { name: '集計エンドポイント', status: '調査中', progress: 38, color: '#b06a2c' }
+          ],
+          statuses: [{ name: 'API gateway', value: '正常' }, { name: 'デプロイキュー', value: '処理中' }, { name: 'ログ転送', value: '待機中' }]
+        },
+        data: {
+          eyebrow: 'REQUEST PATH', title: 'リクエストからサービス状態更新まで', footer: 'client → gateway → service', ariaLabel: 'クライアントからAPIゲートウェイとサービスを経由して保存先へ至るデータフロー',
+          nodes: [
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'Web client', description: '画面操作とセッション情報', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'none', label: '[API]', title: 'GET /health', description: 'サービスの稼働状態を確認', x: 230, y: 8 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'agent', label: '[API]', title: 'POST /api/workflows', description: 'ワークフロー設定を更新', x: 230, y: 86 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/auth/session', description: '認証セッションを発行', x: 230, y: 164 },
+            { id: 'd5', displayId: 'N05', role: 'api', kind: 'agent', label: '[AGENT]', title: 'GET /api/metrics', description: '運用メトリクスを集計', x: 230, y: 242 },
+            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[CACHE]', title: 'Redis', description: 'セッションと短期キャッシュ', x: 600, y: 72 },
+            { id: 'd7', displayId: 'N07', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: '設定・ユーザー・メトリクス', x: 600, y: 202 }
+          ],
+          wires: [
+            { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' }, { from: 'd1', to: 'd5' },
+            { from: 'd2', to: 'd6' }, { from: 'd3', to: 'd7' }, { from: 'd4', to: 'd6' }, { from: 'd5', to: 'd7' }
+          ]
+        }
+      },
+      seikyu_kappo: {
+        workflow: {
+          note: '請求管理の取込から発行までの接点を編集するビュー',
+          groups: [
+            { label: 'BILLING INTAKE', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'APPROVAL & ISSUE', left: 425, top: 105, width: 425, height: 390 }
+          ],
+          nodes: [
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'agent', title: '請求データを取込', description: '取引先データと明細を読み込む' },
+            { id: 'n2', displayId: 'N02', x: 260, y: 295, kind: 'none', title: '明細を検算', description: '金額と税区分の整合性を確認する' },
+            { id: 'n3', displayId: 'N03', x: 475, y: 150, kind: 'chat', title: '承認待ちに登録', description: '担当者へ確認事項を提示する' },
+            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'agent', title: '請求書を発行', description: '承認済みの請求書を生成する' }
+          ],
+          wires: [
+            { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n2', to: 'n3' }, { id: 'w3', from: 'n3', to: 'n4' }
+          ],
+          nextId: 5
+        },
+        ui: {
+          initials: 'SK', brand: 'seikyu_kappo', subtitle: 'Billing workspace', workspace: 'Invoice control room', updated: 'Updated 2 min ago',
+          eyebrow: 'OVERVIEW / BILLING', title: '請求処理の進捗', description: '請求の取込状況、承認待ち、発行実績を確認できます。', filter: '今月',
+          sources: [
+            { name: '取引先', meta: '86 accounts' }, { name: '請求明細', meta: '1,284 lines' },
+            { name: '承認キュー', meta: '24 pending' }, { name: '発行履歴', meta: '342 invoices' }
+          ],
+          kpis: [
+            { label: '処理中の請求', note: '-14 today', value: '136', unit: '件', progress: 64 },
+            { label: '今月の請求額', note: '+6.2%', value: '12.8', unit: 'M円', progress: 71, color: '#6d858d' },
+            { label: '自動照合率', note: 'target 90%', value: '92', unit: '%', progress: 92, color: '#b06a2c' }
+          ],
+          activities: [
+            { name: '9月分 定期請求', status: '取込済み', progress: 82 },
+            { name: '個別契約の明細確認', status: '承認待ち', progress: 56 },
+            { name: '請求書 PDF 発行', status: '準備中', progress: 34, color: '#b06a2c' }
+          ],
+          statuses: [{ name: '明細同期', value: '正常' }, { name: '承認ワークフロー', value: '処理中' }, { name: '外部送信', value: '待機中' }]
+        },
+        data: {
+          eyebrow: 'REQUEST PATH', title: '請求取込から外部送信まで', footer: 'operator → API → invoice store', ariaLabel: '担当者の操作から請求APIを経由して保存先へ至るデータフロー',
+          nodes: [
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: '管理画面', description: '担当者の取込と承認操作', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'agent', label: '[API]', title: 'POST /api/invoices', description: '請求データを登録する', x: 230, y: 20 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'none', label: '[API]', title: 'POST /api/validate', description: '明細と税区分を検算する', x: 230, y: 128 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/approvals', description: '承認依頼と確認事項を処理する', x: 230, y: 236 },
+            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: '取引先・明細・承認履歴', x: 600, y: 72 },
+            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[FILES]', title: 'Invoice Storage', description: '請求書PDFと送信記録', x: 600, y: 202 }
+          ],
+          wires: [
+            { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' },
+            { from: 'd2', to: 'd5' }, { from: 'd3', to: 'd5' }, { from: 'd3', to: 'd6' }, { from: 'd4', to: 'd6' }
+          ]
+        }
+      }
+    };
+
+    let app = 'aikensyu';
+    let view = 'workflow';
+    let editing = false;
+    let selectedNodeId = null;
+    let workflowState = null;
+    let viewSwapTimer = null;
+
     const appButtons = document.querySelectorAll('.app');
     const tabs = document.querySelectorAll('.tab');
     const views = document.querySelectorAll('.view');
     const context = document.getElementById('context');
     const noteTitle = document.getElementById('noteTitle');
+    const noteDescription = document.getElementById('noteDescription');
     const workflow = document.getElementById('workflow');
     const workflowCanvas = document.getElementById('workflowCanvas');
+    const workflowGroups = document.getElementById('workflowGroups');
+    const workflowWires = document.getElementById('workflowWires');
+    const workflowNodes = document.getElementById('workflowNodes');
     const editToggle = document.getElementById('editToggle');
+    const resetWorkflow = document.getElementById('resetWorkflow');
     const workflowMode = document.getElementById('workflowMode');
+    const addNode = document.getElementById('addNode');
     const nodeEditor = document.getElementById('nodeEditor');
     const nodeForm = document.getElementById('nodeForm');
     const editorNodeName = document.getElementById('editorNodeName');
@@ -922,63 +1077,403 @@
     const nodeTitle = document.getElementById('nodeTitle');
     const nodeDescription = document.getElementById('nodeDescription');
     const nodeType = document.getElementById('nodeType');
-    const typeLabels = {
-      agent: 'AIエージェント',
-      chat: 'AIチャット',
-      none: 'AI不使用',
-      future: '構想未実装'
-    };
-    const typeShortLabels = {
-      agent: '[AGENT]',
-      chat: '[CHAT]',
-      none: '[NONE]',
-      future: '[TBD]'
-    };
-    let viewSwapTimer = null;
+    const uiDescription = document.getElementById('uiDescription');
+    const uiContent = document.getElementById('uiContent');
+    const dataDescription = document.getElementById('dataDescription');
+    const dataContent = document.getElementById('dataContent');
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[char]));
+    }
+
+    function hasAppData(appName) {
+      return Object.prototype.hasOwnProperty.call(APP_DATA, appName);
+    }
+
+    function workflowStorageKey(appName) {
+      return WORKFLOW_STORAGE_PREFIX + appName + ':workflow';
+    }
+
+    function defaultWorkflow(appName) {
+      return hasAppData(appName) ? clone(APP_DATA[appName].workflow) : null;
+    }
+
+    function numberOr(value, fallback) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : fallback;
+    }
+
+    function normalizeWorkflowState(saved, appName) {
+      const fallback = defaultWorkflow(appName);
+      if (!saved || !Array.isArray(saved.nodes) || !fallback) return fallback;
+
+      const usedIds = new Set();
+      const nodes = saved.nodes.map((rawNode, index) => {
+        const fallbackNode = fallback.nodes[index] || {};
+        let id = String(rawNode.id || fallbackNode.id || 'n' + (index + 1));
+        while (usedIds.has(id)) id += '-' + index;
+        usedIds.add(id);
+        const kind = KINDS.includes(rawNode.kind) ? rawNode.kind : (KINDS.includes(rawNode.type) ? rawNode.type : (fallbackNode.kind || 'none'));
+        return {
+          id,
+          displayId: String(rawNode.displayId || fallbackNode.displayId || 'N' + String(index + 1).padStart(2, '0')),
+          x: Math.max(0, numberOr(rawNode.x, fallbackNode.x || 0)),
+          y: Math.max(0, numberOr(rawNode.y, fallbackNode.y || 0)),
+          kind,
+          title: String(rawNode.title == null ? (rawNode.name == null ? (fallbackNode.title || '無題') : rawNode.name) : rawNode.title),
+          description: String(rawNode.description == null ? (rawNode.sub == null ? (fallbackNode.description || '') : rawNode.sub) : rawNode.description)
+        };
+      });
+
+      const nodeIds = new Set(nodes.map(node => node.id));
+      const savedWires = Array.isArray(saved.wires) ? saved.wires : fallback.wires;
+      const wires = savedWires.map((wire, index) => {
+        const from = Array.isArray(wire) ? wire[0] : wire && wire.from;
+        const to = Array.isArray(wire) ? wire[1] : wire && wire.to;
+        return { id: String((wire && wire.id) || 'w' + (index + 1)), from: String(from || ''), to: String(to || '') };
+      }).filter(wire => nodeIds.has(wire.from) && nodeIds.has(wire.to) && wire.from !== wire.to);
+      const maxNodeNumber = nodes.reduce((max, node) => {
+        const match = node.id.match(/(\d+)$/);
+        return Math.max(max, match ? Number(match[1]) : 0);
+      }, 0);
+
+      return {
+        note: fallback.note,
+        groups: fallback.groups,
+        nodes,
+        wires,
+        nextId: Math.max(1, numberOr(saved.nextId, maxNodeNumber + 1), maxNodeNumber + 1)
+      };
+    }
+
+    function loadWorkflowState(appName) {
+      const fallback = defaultWorkflow(appName);
+      if (!fallback) return null;
+      try {
+        const raw = window.localStorage.getItem(workflowStorageKey(appName));
+        return raw ? normalizeWorkflowState(JSON.parse(raw), appName) : fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveWorkflowState() {
+      if (!workflowState || !hasAppData(app)) return;
+      const payload = {
+        version: 1,
+        nodes: workflowState.nodes.map(node => ({
+          id: node.id,
+          displayId: node.displayId,
+          x: node.x,
+          y: node.y,
+          kind: node.kind,
+          title: node.title,
+          description: node.description
+        })),
+        wires: workflowState.wires,
+        nextId: workflowState.nextId
+      };
+      try { window.localStorage.setItem(workflowStorageKey(app), JSON.stringify(payload)); } catch (error) {}
+    }
+
+    function emptyStateMarkup(title) {
+      return '<div class="empty-state"><span class="empty-kicker">NO CONFIGURATION</span><h3>' + escapeHtml(title) + '</h3><p>このアプリの構成はまだ登録されていません</p></div>';
+    }
+
+    function updateContext() {
+      context.textContent = app;
+      noteTitle.textContent = app + ' のワークフロー';
+      noteDescription.textContent = workflowState ? workflowState.note : 'このアプリの構成はまだ登録されていません';
+    }
+
+    function workflowNodeElement(id) {
+      return [...workflowNodes.querySelectorAll('.workflow-node')].find(node => node.dataset.id === id) || null;
+    }
+
+    function hideNodeEditor() {
+      nodeEditor.setAttribute('aria-hidden', 'true');
+      nodeEditor.classList.remove('is-switching');
+      editorNodeName.textContent = '';
+      editorStatus.textContent = '未選択';
+    }
 
     function selectNode(node) {
-      if (!node) return;
-      selectedNode = node;
-      document.querySelectorAll('#workflow .workflow-node').forEach(x => x.classList.toggle('selected', x === node));
-      editorNodeName.textContent = node.querySelector('h3').textContent;
-      nodeTitle.value = node.querySelector('h3').textContent;
-      nodeDescription.value = node.querySelector('p').textContent;
-      nodeType.value = [...node.classList].find(x => typeLabels[x]) || 'none';
+      if (!editing || !workflowState || !node) return;
+      const nodeData = workflowState.nodes.find(item => item.id === node.dataset.id);
+      if (!nodeData) return;
+      selectedNodeId = nodeData.id;
+      workflowNodes.querySelectorAll('.workflow-node').forEach(item => item.classList.toggle('selected', item === node));
+      editorNodeName.textContent = nodeData.title;
+      nodeTitle.value = nodeData.title;
+      nodeDescription.value = nodeData.description;
+      nodeType.value = nodeData.kind;
       editorStatus.textContent = '選択中';
       nodeEditor.setAttribute('aria-hidden', 'false');
       nodeEditor.classList.remove('is-switching');
       requestAnimationFrame(() => nodeEditor.classList.add('is-switching'));
     }
 
-    function bindNode(node) {
+    function createWorkflowNode(nodeData) {
+      const node = document.createElement('article');
+      node.className = 'node ' + nodeData.kind + ' workflow-node';
+      node.dataset.id = nodeData.id;
+      node.dataset.node = nodeData.title;
+      node.style.left = nodeData.x + 'px';
+      node.style.top = nodeData.y + 'px';
+      node.innerHTML = '<div class="node-actions"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><small class="node-id" aria-hidden="true"></small><h3></h3><p></p><span></span>';
+      node.querySelector('.node-actions').setAttribute('aria-label', nodeData.title + 'の操作');
+      node.querySelector('.node-id').textContent = nodeData.displayId;
+      node.querySelector('h3').textContent = nodeData.title;
+      node.querySelector('p').textContent = nodeData.description;
+      node.querySelector('span').textContent = TYPE_SHORT_LABELS[nodeData.kind];
+      if (selectedNodeId === nodeData.id) node.classList.add('selected');
+      bindWorkflowNode(node, nodeData);
+      return node;
+    }
+
+    function bindWorkflowNode(node, nodeData) {
       node.addEventListener('click', event => {
         if (!editing || event.target.closest('.node-action')) return;
         selectNode(node);
       });
       node.querySelector('.node-action.edit').addEventListener('click', event => {
         event.stopPropagation();
-        if (editing) {
-          selectNode(node);
-          nodeTitle.focus();
-        }
+        if (!editing) return;
+        selectNode(node);
+        nodeTitle.focus();
       });
       node.querySelector('.node-action.delete').addEventListener('click', event => {
         event.stopPropagation();
-        if (!editing) return;
-        const wasSelected = selectedNode === node;
-        node.remove();
-        if (wasSelected) selectNode(document.querySelector('#workflow .workflow-node'));
+        if (!editing || !workflowState) return;
+        const wasSelected = selectedNodeId === nodeData.id;
+        workflowState.nodes = workflowState.nodes.filter(item => item.id !== nodeData.id);
+        workflowState.wires = workflowState.wires.filter(wire => wire.from !== nodeData.id && wire.to !== nodeData.id);
+        if (wasSelected) selectedNodeId = workflowState.nodes[0] ? workflowState.nodes[0].id : null;
+        saveWorkflowState();
+        renderWorkflow();
+      });
+      node.addEventListener('pointerdown', event => {
+        if (!editing || event.button !== 0 || event.target.closest('.node-action')) return;
+        startNodeDrag(event, node, nodeData);
       });
     }
 
-    document.querySelectorAll('#workflow .workflow-node').forEach(bindNode);
+    const DRAG_THRESHOLD = 4;
 
-    appButtons.forEach(button => button.addEventListener('click', () => {
-      app = button.dataset.app;
-      appButtons.forEach(x => x.classList.toggle('active', x === button));
-      context.textContent = app;
-      noteTitle.textContent = app + ' のワークフロー';
-    }));
+    function canvasScale() {
+      const unscaledWidth = workflowCanvas.offsetWidth || 860;
+      return workflowCanvas.getBoundingClientRect().width / unscaledWidth || 1;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function startNodeDrag(event, node, nodeData) {
+      if (!editing || !workflowState) return;
+      const pointerId = event.pointerId;
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const originalRect = node.getBoundingClientRect();
+      const scale = canvasScale();
+      const grabX = (event.clientX - originalRect.left) / scale;
+      const grabY = (event.clientY - originalRect.top) / scale;
+      let dragging = false;
+
+      function move(moveEvent) {
+        if (moveEvent.pointerId !== pointerId) return;
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        if (!dragging) {
+          if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+          dragging = true;
+          if (node.setPointerCapture) node.setPointerCapture(pointerId);
+          node.classList.add('dragging');
+        }
+        moveEvent.preventDefault();
+        const rect = workflowCanvas.getBoundingClientRect();
+        const currentScale = canvasScale();
+        const maxX = Math.max(0, workflowCanvas.clientWidth - node.offsetWidth);
+        const maxY = Math.max(0, workflowCanvas.clientHeight - node.offsetHeight);
+        nodeData.x = Math.round(clamp((moveEvent.clientX - rect.left) / currentScale - grabX, 0, maxX));
+        nodeData.y = Math.round(clamp((moveEvent.clientY - rect.top) / currentScale - grabY, 0, maxY));
+        node.style.left = nodeData.x + 'px';
+        node.style.top = nodeData.y + 'px';
+        drawWorkflowWires();
+      }
+
+      function finish(finishEvent) {
+        if (finishEvent && finishEvent.pointerId !== pointerId) return;
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', finish);
+        window.removeEventListener('pointercancel', finish);
+        if (!dragging) return;
+        if (node.releasePointerCapture) {
+          try { node.releasePointerCapture(pointerId); } catch (error) {}
+        }
+        node.classList.remove('dragging');
+        saveWorkflowState();
+      }
+
+      window.addEventListener('pointermove', move, { passive: false });
+      window.addEventListener('pointerup', finish);
+      window.addEventListener('pointercancel', finish);
+    }
+
+    function edgePoint(from, to, width, height) {
+      const fx = from.x + width / 2;
+      const fy = from.y + height / 2;
+      const tx = to.x + width / 2;
+      const ty = to.y + height / 2;
+      const dx = tx - fx;
+      const dy = ty - fy;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        const sx = fx + (dx > 0 ? width / 2 : -width / 2);
+        return { x: sx, y: fy + dy * ((sx - fx) / (dx || 1)) };
+      }
+      const sy = fy + (dy > 0 ? height / 2 : -height / 2);
+      return { x: fx + dx * ((sy - fy) / (dy || 1)), y: sy };
+    }
+
+    function wirePath(from, to, width, height) {
+      const start = edgePoint(from, to, width, height);
+      const end = edgePoint(to, from, width, height);
+      const midX = (start.x + end.x) / 2;
+      return 'M ' + start.x + ' ' + start.y + ' C ' + midX + ' ' + start.y + ' ' + midX + ' ' + end.y + ' ' + end.x + ' ' + end.y;
+    }
+
+    function drawWorkflowWires() {
+      workflowWires.innerHTML = '<defs><marker id="workflowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a"></path></marker></defs>';
+      if (!workflowState) return;
+      const byId = Object.fromEntries(workflowState.nodes.map(node => [node.id, node]));
+      workflowState.wires.forEach(wire => {
+        const from = byId[wire.from];
+        const to = byId[wire.to];
+        if (!from || !to) return;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'wire');
+        path.setAttribute('d', wirePath(from, to, 170, 112));
+        path.setAttribute('marker-end', 'url(#workflowArrow)');
+        workflowWires.appendChild(path);
+      });
+    }
+
+    function renderWorkflow() {
+      updateContext();
+      workflowGroups.replaceChildren();
+      workflowNodes.replaceChildren();
+      workflowWires.innerHTML = '';
+      workflowMode.hidden = !workflowState;
+      addNode.hidden = !workflowState;
+      workflow.classList.toggle('editing', editing && Boolean(workflowState));
+
+      if (!workflowState) {
+        workflowNodes.innerHTML = emptyStateMarkup('ワークフロー');
+        hideNodeEditor();
+        return;
+      }
+
+      workflowState.groups.forEach(groupData => {
+        const group = document.createElement('div');
+        group.className = 'group';
+        group.style.left = groupData.left + 'px';
+        group.style.top = groupData.top + 'px';
+        group.style.width = groupData.width + 'px';
+        group.style.height = groupData.height + 'px';
+        const label = document.createElement('label');
+        label.textContent = groupData.label;
+        group.appendChild(label);
+        workflowGroups.appendChild(group);
+      });
+      drawWorkflowWires();
+      workflowState.nodes.forEach(nodeData => workflowNodes.appendChild(createWorkflowNode(nodeData)));
+
+      if (!workflowState.nodes.some(node => node.id === selectedNodeId)) selectedNodeId = null;
+      if (workflowState.nodes.length === 0) {
+        workflowNodes.innerHTML = '<div class="empty-state"><span class="empty-kicker">EMPTY WORKFLOW</span><h3>ノードがありません</h3><p>編集モードでノードを追加できます</p></div>';
+        hideNodeEditor();
+      } else if (editing) {
+        const node = workflowNodeElement(selectedNodeId || workflowState.nodes[0].id);
+        selectNode(node);
+      } else {
+        hideNodeEditor();
+      }
+    }
+
+    function buildUiMarkup(data) {
+      const sources = data.sources.map((source, index) => '<a class="ui-source' + (index === 0 ? ' active' : '') + '" href="#ui"><span class="ui-source-mark"></span><span><b>' + escapeHtml(source.name) + '</b><small>' + escapeHtml(source.meta) + '</small></span></a>').join('');
+      const kpis = data.kpis.map(kpi => {
+        const progress = clamp(numberOr(kpi.progress, 0), 0, 100);
+        const color = kpi.color ? ' style="background:' + escapeHtml(kpi.color) + ';"' : '';
+        return '<div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">' + escapeHtml(kpi.label) + '</span><span class="ui-kpi-note">' + escapeHtml(kpi.note) + '</span></div><strong>' + escapeHtml(kpi.value) + '<small>' + escapeHtml(kpi.unit) + '</small></strong><div class="ui-kpi-line"><i style="width:' + progress + '%;' + (color ? 'background:' + escapeHtml(kpi.color) + ';' : '') + '"></i></div></div>';
+      }).join('');
+      const activities = data.activities.map(activity => {
+        const progress = clamp(numberOr(activity.progress, 0), 0, 100);
+        const color = activity.color ? ' background:' + escapeHtml(activity.color) + ';' : '';
+        return '<div class="ui-activity-row"><div><b>' + escapeHtml(activity.name) + '</b><div class="ui-activity-bar"><i style="width:' + progress + '%;' + color + '"></i></div></div><small>' + escapeHtml(activity.status) + '</small></div>';
+      }).join('');
+      const statuses = data.statuses.map(status => '<div class="ui-status"><span>' + escapeHtml(status.name) + '</span><b>' + escapeHtml(status.value) + '</b></div>').join('');
+      return '<div class="ui-preview" aria-label="' + escapeHtml(data.brand) + ' のダッシュボードプレビュー"><aside class="ui-sidebar"><div class="ui-brand"><span class="ui-logo">' + escapeHtml(data.initials) + '</span><div><strong>' + escapeHtml(data.brand) + '</strong><small>' + escapeHtml(data.subtitle) + '</small></div></div><div class="ui-section-label">SOURCES</div><nav class="ui-source-nav" aria-label="ソース一覧">' + sources + '</nav><div class="ui-sidebar-footer"><span>WORKSPACE</span><b>' + escapeHtml(data.workspace) + '</b><small>' + escapeHtml(data.updated) + '</small></div></aside><div class="ui-main"><div class="ui-header"><div><span class="ui-eyebrow">' + escapeHtml(data.eyebrow) + '</span><h3>' + escapeHtml(data.title) + '</h3><p>' + escapeHtml(data.description) + '</p></div><button class="ui-filter">' + escapeHtml(data.filter) + '<span class="ui-filter-caret" aria-hidden="true"></span></button></div><div class="ui-kpis">' + kpis + '</div><div class="ui-panels"><section class="ui-panel"><h4>最近のアクティビティ</h4><div class="ui-activity">' + activities + '</div></section><section class="ui-panel"><h4>運用ステータス</h4><div class="ui-status-list">' + statuses + '</div></section></div></div></div>';
+    }
+
+    function renderUiView() {
+      const data = hasAppData(app) ? APP_DATA[app].ui : null;
+      uiDescription.textContent = data ? data.description : 'このアプリの構成はまだ登録されていません';
+      uiContent.innerHTML = data ? buildUiMarkup(data) : emptyStateMarkup('アプリのUI');
+    }
+
+    function dataWirePathMarkup(data) {
+      const byId = Object.fromEntries(data.nodes.map(node => [node.id, node]));
+      return data.wires.map(wire => {
+        const from = byId[wire.from];
+        const to = byId[wire.to];
+        return from && to ? '<path class="wire data-wire" d="' + wirePath(from, to, 164, 102) + '"></path>' : '';
+      }).join('');
+    }
+
+    function buildDataMarkup(data) {
+      const nodes = data.nodes.map(node => '<article class="node ' + escapeHtml(node.kind) + ' data-node" style="left:' + numberOr(node.x, 0) + 'px;top:' + numberOr(node.y, 0) + 'px"><small class="node-id" aria-hidden="true">' + escapeHtml(node.displayId) + '</small><h3>' + escapeHtml(node.title) + '</h3><p>' + escapeHtml(node.description) + '</p><span>' + escapeHtml(node.label) + '</span></article>').join('');
+      return '<div class="flow-card"><div class="flow-header"><div><span class="flow-eyebrow">' + escapeHtml(data.eyebrow) + '</span><h3>' + escapeHtml(data.title) + '</h3></div><div class="flow-legend"><span><i class="legend-dot"></i>クライアント</span><span><i class="legend-dot api"></i>API</span><span><i class="legend-dot session"></i>AI連携</span></div></div><div class="flow-board" aria-label="' + escapeHtml(data.ariaLabel) + '"><span class="flow-column-label client">CLIENT</span><span class="flow-column-label endpoint">API ENDPOINTS</span><span class="flow-column-label storage">PERSISTENCE</span><svg width="820" height="360" viewBox="0 0 820 360" aria-hidden="true"><defs><marker id="dataArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a"></path></marker></defs>' + dataWirePathMarkup(data) + '</svg>' + nodes + '</div><div class="flow-footer"><span>主要な呼び出し:</span><code>' + escapeHtml(data.footer) + '</code></div></div>';
+    }
+
+    function renderDataView() {
+      const data = hasAppData(app) ? APP_DATA[app].data : null;
+      dataDescription.textContent = data ? '選択アプリ内外のデータの流れと責任境界を、リクエスト単位で確認するビューです。' : 'このアプリの構成はまだ登録されていません';
+      dataContent.innerHTML = data ? buildDataMarkup(data) : emptyStateMarkup('データフロー');
+    }
+
+    function updateEditControls() {
+      const canEdit = Boolean(workflowState);
+      if (!canEdit) {
+        editing = false;
+        selectedNodeId = null;
+      }
+      editToggle.disabled = !canEdit;
+      resetWorkflow.disabled = !canEdit;
+      editToggle.textContent = editing ? '閲覧に戻る' : '編集する';
+      editToggle.setAttribute('aria-pressed', String(editing));
+      workflowMode.textContent = editing ? '編集モード' : '閲覧モード';
+    }
+
+    function activateApp(nextApp) {
+      if (nextApp === app) return;
+      app = nextApp;
+      appButtons.forEach(button => button.classList.toggle('active', button.dataset.app === app));
+      workflowState = loadWorkflowState(app);
+      selectedNodeId = null;
+      updateEditControls();
+      renderWorkflow();
+      renderUiView();
+      renderDataView();
+    }
+
+    appButtons.forEach(button => button.addEventListener('click', () => activateApp(button.dataset.app)));
 
     document.getElementById('appSearch').addEventListener('input', event => {
       const query = event.target.value.trim().toLowerCase();
@@ -990,14 +1485,14 @@
     function switchView(nextView) {
       if (nextView === view) return;
       const nextViewEl = document.getElementById(nextView);
-      const currentViewEl = [...views].find(x => !x.classList.contains('hidden'));
+      const currentViewEl = [...views].find(element => !element.classList.contains('hidden'));
       view = nextView;
-      tabs.forEach(x => x.classList.toggle('active', x.dataset.view === nextView));
+      tabs.forEach(button => button.classList.toggle('active', button.dataset.view === nextView));
       if (viewSwapTimer) window.clearTimeout(viewSwapTimer);
-      views.forEach(x => {
-        if (x !== currentViewEl && x !== nextViewEl) {
-          x.classList.add('hidden');
-          x.classList.remove('is-entering', 'is-leaving');
+      views.forEach(element => {
+        if (element !== currentViewEl && element !== nextViewEl) {
+          element.classList.add('hidden');
+          element.classList.remove('is-entering', 'is-leaving');
         }
       });
       if (currentViewEl && currentViewEl !== nextViewEl) {
@@ -1016,48 +1511,70 @@
     tabs.forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
     editToggle.addEventListener('click', () => {
+      if (!workflowState) return;
       editing = !editing;
-      workflow.classList.toggle('editing', editing);
-      editToggle.textContent = editing ? '閲覧に戻る' : '編集する';
-      editToggle.setAttribute('aria-pressed', String(editing));
-      workflowMode.textContent = editing ? '編集モード' : '閲覧モード';
-      if (editing) {
-        selectNode(selectedNode && selectedNode.isConnected ? selectedNode : document.querySelector('#workflow .workflow-node'));
-      } else {
-        nodeEditor.setAttribute('aria-hidden', 'true');
-      }
+      updateEditControls();
+      renderWorkflow();
     });
 
-    document.getElementById('addNode').addEventListener('click', () => {
-      if (!editing) return;
-      addedNodes += 1;
-      const node = document.createElement('article');
-      node.className = 'node none workflow-node';
-      node.dataset.node = '新しいノード';
-      node.style.left = `${70 + (addedNodes - 1) % 3 * 190}px`;
-      node.style.top = `${505 + Math.floor((addedNodes - 1) / 3) * 125}px`;
-      node.innerHTML = `<div class="node-actions" aria-label="新しいノードの操作"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><small class="node-id" aria-hidden="true">N${String(4 + addedNodes).padStart(2, '0')}</small><h3>新しいノード</h3><p>追加したステップの説明</p><span>${typeShortLabels.none}</span>`;
-      workflowCanvas.append(node);
-      bindNode(node);
-      selectNode(node);
+    resetWorkflow.addEventListener('click', () => {
+      if (!workflowState) return;
+      try { window.localStorage.removeItem(workflowStorageKey(app)); } catch (error) {}
+      workflowState = defaultWorkflow(app);
+      selectedNodeId = null;
+      renderWorkflow();
+    });
+
+    addNode.addEventListener('click', () => {
+      if (!editing || !workflowState) return;
+      const slot = workflowState.nodes.length;
+      let id = 'n' + workflowState.nextId++;
+      const existingIds = new Set(workflowState.nodes.map(node => node.id));
+      while (existingIds.has(id)) id = 'n' + workflowState.nextId++;
+      const x = 55 + (slot % 4) * 190;
+      const y = Math.min(500, 505 + Math.floor(slot / 4) * 100);
+      const nodeData = {
+        id,
+        displayId: 'N' + String(workflowState.nextId - 1).padStart(2, '0'),
+        x,
+        y,
+        kind: 'none',
+        title: '新しいノード',
+        description: '追加したステップの説明'
+      };
+      workflowState.nodes.push(nodeData);
+      selectedNodeId = nodeData.id;
+      saveWorkflowState();
+      renderWorkflow();
     });
 
     nodeForm.addEventListener('submit', event => {
       event.preventDefault();
-      if (!selectedNode) return;
-      const title = nodeTitle.value.trim() || '名称未設定';
-      const description = nodeDescription.value.trim() || '説明未設定';
-      selectedNode.querySelector('h3').textContent = title;
-      selectedNode.querySelector('p').textContent = description;
-      selectedNode.querySelector('span').textContent = typeShortLabels[nodeType.value];
-      selectedNode.classList.remove('agent', 'chat', 'none', 'future');
-      selectedNode.classList.add(nodeType.value);
-      editorNodeName.textContent = title;
-      selectedNode.dataset.node = title;
-      editorStatus.textContent = '保存済み';
+      if (!editing || !workflowState || !selectedNodeId) return;
+      const nodeData = workflowState.nodes.find(node => node.id === selectedNodeId);
+      if (!nodeData) return;
+      nodeData.title = nodeTitle.value.trim() || '名称未設定';
+      nodeData.description = nodeDescription.value.trim() || '説明未設定';
+      nodeData.kind = KINDS.includes(nodeType.value) ? nodeType.value : 'none';
+      saveWorkflowState();
+      renderWorkflow();
+      const renderedNode = workflowNodeElement(nodeData.id);
+      if (renderedNode) {
+        selectNode(renderedNode);
+        editorStatus.textContent = '保存済み';
+      }
     });
 
-    document.getElementById('cancelNode').addEventListener('click', () => selectNode(selectedNode));
+    document.getElementById('cancelNode').addEventListener('click', () => {
+      const node = workflowNodeElement(selectedNodeId);
+      if (node) selectNode(node);
+    });
+
+    workflowState = loadWorkflowState(app);
+    updateEditControls();
+    renderWorkflow();
+    renderUiView();
+    renderDataView();
   </script>
 </body>
 </html>
