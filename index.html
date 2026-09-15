@@ -1318,6 +1318,7 @@
           try { node.releasePointerCapture(pointerId); } catch (error) {}
         }
         node.classList.remove('dragging');
+        drawWorkflowWires();
         saveWorkflowState();
       }
 
@@ -1326,39 +1327,53 @@
       window.addEventListener('pointercancel', finish);
     }
 
-    function edgePoint(from, to, width, height) {
-      const fx = from.x + width / 2;
-      const fy = from.y + height / 2;
-      const tx = to.x + width / 2;
-      const ty = to.y + height / 2;
+    const WORKFLOW_NODE_FALLBACK_WIDTH = 170;
+    const WORKFLOW_NODE_FALLBACK_HEIGHT = 112;
+
+    function edgePoint(from, to, fromWidth, fromHeight, toWidth = fromWidth, toHeight = fromHeight) {
+      const fx = from.x + fromWidth / 2;
+      const fy = from.y + fromHeight / 2;
+      const tx = to.x + toWidth / 2;
+      const ty = to.y + toHeight / 2;
       const dx = tx - fx;
       const dy = ty - fy;
       if (Math.abs(dx) > Math.abs(dy)) {
-        const sx = fx + (dx > 0 ? width / 2 : -width / 2);
+        const sx = fx + (dx > 0 ? fromWidth / 2 : -fromWidth / 2);
         return { x: sx, y: fy + dy * ((sx - fx) / (dx || 1)) };
       }
-      const sy = fy + (dy > 0 ? height / 2 : -height / 2);
+      const sy = fy + (dy > 0 ? fromHeight / 2 : -fromHeight / 2);
       return { x: fx + dx * ((sy - fy) / (dy || 1)), y: sy };
     }
 
-    function wirePath(from, to, width, height) {
-      const start = edgePoint(from, to, width, height);
-      const end = edgePoint(to, from, width, height);
+    function wirePath(from, to, fromWidth, fromHeight, toWidth = fromWidth, toHeight = fromHeight) {
+      const start = edgePoint(from, to, fromWidth, fromHeight, toWidth, toHeight);
+      const end = edgePoint(to, from, toWidth, toHeight, fromWidth, fromHeight);
       const midX = (start.x + end.x) / 2;
       return 'M ' + start.x + ' ' + start.y + ' C ' + midX + ' ' + start.y + ' ' + midX + ' ' + end.y + ' ' + end.x + ' ' + end.y;
+    }
+
+    function workflowNodeSize(nodeData) {
+      const node = workflowNodeElement(nodeData.id);
+      return {
+        width: node && node.offsetWidth ? node.offsetWidth : WORKFLOW_NODE_FALLBACK_WIDTH,
+        height: node && node.offsetHeight ? node.offsetHeight : WORKFLOW_NODE_FALLBACK_HEIGHT
+      };
     }
 
     function drawWorkflowWires() {
       workflowWires.innerHTML = '<defs><marker id="workflowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a"></path></marker></defs>';
       if (!workflowState) return;
       const byId = Object.fromEntries(workflowState.nodes.map(node => [node.id, node]));
+      const sizeById = Object.fromEntries(workflowState.nodes.map(node => [node.id, workflowNodeSize(node)]));
       workflowState.wires.forEach(wire => {
         const from = byId[wire.from];
         const to = byId[wire.to];
         if (!from || !to) return;
+        const fromSize = sizeById[from.id];
+        const toSize = sizeById[to.id];
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('class', 'wire');
-        path.setAttribute('d', wirePath(from, to, 170, 112));
+        path.setAttribute('d', wirePath(from, to, fromSize.width, fromSize.height, toSize.width, toSize.height));
         path.setAttribute('marker-end', 'url(#workflowArrow)');
         workflowWires.appendChild(path);
       });
@@ -1391,8 +1406,8 @@
         group.appendChild(label);
         workflowGroups.appendChild(group);
       });
-      drawWorkflowWires();
       workflowState.nodes.forEach(nodeData => workflowNodes.appendChild(createWorkflowNode(nodeData)));
+      drawWorkflowWires();
 
       if (!workflowState.nodes.some(node => node.id === selectedNodeId)) selectedNodeId = null;
       if (workflowState.nodes.length === 0) {
