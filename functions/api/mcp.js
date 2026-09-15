@@ -176,12 +176,23 @@ async function readDiagram(toolArguments, env) {
   };
 }
 
+const MAX_NODES = 500;
+const MAX_PAYLOAD_BYTES = 200_000;
+
 async function writeDiagram(toolArguments, env) {
   const { app, view, nodes } = validateWriteArguments(toolArguments);
   const key = diagramKey(app, view);
 
+  if (nodes.length > MAX_NODES) {
+    throw new JsonRpcError(-32602, `nodes exceeds the limit of ${MAX_NODES}`);
+  }
+  const serialized = JSON.stringify(nodes);
+  if (serialized.length > MAX_PAYLOAD_BYTES) {
+    throw new JsonRpcError(-32602, `payload exceeds the limit of ${MAX_PAYLOAD_BYTES} bytes`);
+  }
+
   ensureKvBinding(env);
-  await env.WORKFLOW_KV.put(key, JSON.stringify(nodes));
+  await env.WORKFLOW_KV.put(key, serialized);
 
   return {
     content: [
