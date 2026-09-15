@@ -2,11 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "workflow-diagram-editor",
   "compatibility_date": "2026-09-10",
-  "pages_build_output_dir": "."
-  // MCP用KVバインディング(WORKFLOW_KV)は未作成のため一旦コメントアウト。
-  // 実際にKVを作成したら(`wrangler kv namespace create WORKFLOW_KV`)、
-  // 下記を復元しIDを埋めてから再デプロイする(docs/mcp-setup.md参照)。
-  // "kv_namespaces": [
-  //   { "binding": "WORKFLOW_KV", "id": "REPLACE_WITH_REAL_KV_ID" }
-  // ]
+  "pages_build_output_dir": ".",
+  "kv_namespaces": [
+    { "binding": "WORKFLOW_KV", "id": "7b4601af21534955812aa572439930fc" }
+  ]
 }
