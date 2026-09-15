@@ -138,6 +138,8 @@
     }
     .app-list {
       display: grid;
+      align-content: start;
+      align-items: start;
       min-height: 0;
       flex: 1 1 auto;
       gap: 4px;
@@ -809,18 +811,12 @@
 <body>
   <div class="shell">
     <aside class="app-panel" aria-label="アプリ一覧パネル">
-      <div class="app-panel-header"><strong>APPLICATIONS</strong><small>9 repositories</small></div>
+      <div class="app-panel-header"><strong>APPLICATIONS</strong><small>3 repositories</small></div>
       <label class="app-search"><span class="app-search-icon" aria-hidden="true"></span><input id="appSearch" type="search" placeholder="アプリを検索" aria-label="アプリを検索"></label>
       <nav class="app-list" aria-label="アプリ一覧">
-        <button class="app active" data-app="aikensyu"><b>aikensyu</b><small>経営ダッシュボード / 12 diagrams</small></button>
-        <button class="app" data-app="web-service-ginleaf"><b>web-service-ginleaf</b><small>Web基盤 / 8 diagrams</small></button>
-        <button class="app" data-app="seikyu_kappo"><b>seikyu_kappo</b><small>請求管理 / 6 diagrams</small></button>
-        <button class="app" data-app="base"><b>base</b><small>共通基盤 / 15 diagrams</small></button>
-        <button class="app" data-app="kakikyogi-playground"><b>kakikyogi-playground</b><small>競技開発 / 5 diagrams</small></button>
-        <button class="app" data-app="mydocument_setup"><b>mydocument_setup</b><small>ドキュメント / 4 diagrams</small></button>
-        <button class="app" data-app="oyster-cup"><b>oyster-cup</b><small>実験環境 / 9 diagrams</small></button>
-        <button class="app" data-app="syanai"><b>syanai</b><small>社内ツール / 7 diagrams</small></button>
-        <button class="app" data-app="workflow-lab"><b>workflow-lab</b><small>検証用 / 3 diagrams</small></button>
+        <button class="app active" data-app="aikensyu"><b>aikensyu</b><small>経営ダッシュボード</small></button>
+        <button class="app" data-app="web-service-ginleaf"><b>web-service-ginleaf</b><small>社内知見サイト</small></button>
+        <button class="app" data-app="seikyu_kappo"><b>seikyu_kappo</b><small>請求書整理</small></button>
       </nav>
       <div class="app-panel-footer"><strong>横断ワークスペース</strong>複数リポジトリの設計を同じ視点で確認</div>
     </aside>
@@ -942,72 +938,68 @@
       },
       'web-service-ginleaf': {
         workflow: {
-          note: 'Web基盤のリクエスト処理と運用接点を編集するビュー',
+          note: 'ドキュメント公開から会員サイト機能までの接点を編集するビュー',
           groups: [
-            { label: 'REQUEST & VALIDATION', left: 20, top: 105, width: 405, height: 390 },
-            { label: 'SERVICE & PERSISTENCE', left: 425, top: 105, width: 425, height: 390 }
+            { label: 'DOCS & SHARING', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'MEMBER SITE', left: 425, top: 105, width: 425, height: 390 }
           ],
           nodes: [
-            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'リクエストを受信', description: 'ブラウザからの入力を受け付ける' },
-            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'agent', title: '認証を確認', description: 'セッションと権限を検証する' },
-            { id: 'n3', displayId: 'N03', x: 445, y: 150, kind: 'none', title: 'APIを実行', description: 'ルートに応じた処理を呼び出す' },
-            { id: 'n4', displayId: 'N04', x: 635, y: 295, kind: 'none', title: 'データを更新', description: '永続化層へ結果を書き込む' },
-            { id: 'n5', displayId: 'N05', x: 650, y: 150, kind: 'agent', title: 'レスポンスを返す', description: '画面に表示する形式へ整える' }
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'ドキュメント執筆', description: 'docs/配下にテーマごとの知見を追加' },
+            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'none', title: '共有権限を設定', description: 'Cloudflare Access経由でdocs-privateを社内/社外共有' },
+            { id: 'n3', displayId: 'N03', x: 460, y: 150, kind: 'none', title: '会員登録・ログイン', description: 'D1 + Better Authで認証' },
+            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'none', title: '会員向けコンテンツ提供', description: 'お知らせ・会員特典・プレミアム記事を表示' }
           ],
           wires: [
-            { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n2', to: 'n3' },
-            { id: 'w3', from: 'n3', to: 'n4' }, { id: 'w4', from: 'n4', to: 'n5' }
+            { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n3', to: 'n4' }
           ],
-          nextId: 6
+          nextId: 5
         },
         ui: {
-          initials: 'GS', brand: 'web-service-ginleaf', subtitle: 'Service operations', workspace: 'Ginleaf service', updated: 'Updated 11 min ago',
-          eyebrow: 'OVERVIEW / SERVICE OPS', title: 'Webサービスの稼働状況', description: 'APIの利用状況とデプロイ後の健全性を確認できます。', filter: '直近24時間',
+          initials: 'WG', brand: 'web-service-ginleaf', subtitle: '社内知見サイト', workspace: 'Ginleaf Web', updated: 'Updated 11 min ago',
+          eyebrow: 'OVERVIEW / DOCS', title: 'ドキュメント共有状況', description: '公開中のドキュメントと共有設定を確認できます。', filter: '直近7日',
           sources: [
-            { name: 'API health', meta: '18 endpoints' }, { name: 'Deployments', meta: '6 releases' },
-            { name: 'Usage metrics', meta: '42 routes' }, { name: 'Error reports', meta: '3 saved views' }
+            { name: 'docs/', meta: 'テーマ別知見' }, { name: 'docs-private/', meta: 'アクセス制御あり' },
+            { name: '会員サイト', meta: 'D1 + Better Auth' }
           ],
           kpis: [
-            { label: '稼働中のAPI', note: '+3 this month', value: '18', unit: '本', progress: 76 },
-            { label: '平均応答時間', note: '-12 ms', value: '142', unit: 'ms', progress: 58, color: '#6d858d' },
-            { label: 'リクエスト成功率', note: 'target 99.5%', value: '99.8', unit: '%', progress: 92, color: '#b06a2c' }
+            { label: '公開ドキュメント', note: '', value: '—', unit: '', progress: 60 },
+            { label: '共有中フォルダ', note: '', value: '—', unit: '', progress: 45, color: '#6d858d' },
+            { label: '会員登録数', note: '', value: '—', unit: '', progress: 30, color: '#b06a2c' }
           ],
           activities: [
-            { name: 'workflow API v2.4', status: '稼働中', progress: 86 },
-            { name: '認証サービスの更新', status: '監視中', progress: 61 },
-            { name: '集計エンドポイント', status: '調査中', progress: 38, color: '#b06a2c' }
+            { name: '共有通知メール(notifyGrantee)', status: '実装済み', progress: 100 },
+            { name: '会員サイト /members', status: '公開中', progress: 100 },
+            { name: 'llms.txt公開', status: '公開中', progress: 100 }
           ],
-          statuses: [{ name: 'API gateway', value: '正常' }, { name: 'デプロイキュー', value: '処理中' }, { name: 'ログ転送', value: '待機中' }]
+          statuses: [{ name: 'Cloudflare Access', value: '正常' }, { name: 'D1', value: '正常' }, { name: '通知メール', value: '正常' }]
         },
         data: {
-          eyebrow: 'REQUEST PATH', title: 'リクエストからサービス状態更新まで', footer: 'client → gateway → service', ariaLabel: 'クライアントからAPIゲートウェイとサービスを経由して保存先へ至るデータフロー',
+          eyebrow: 'REQUEST PATH', title: 'ブラウザから保存まで', footer: 'browser → API → D1', ariaLabel: 'ブラウザから実在のAPIルートを経由してD1へ至るデータフロー',
           nodes: [
-            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'Web client', description: '画面操作とセッション情報', x: 18, y: 137 },
-            { id: 'd2', displayId: 'N02', role: 'api', kind: 'none', label: '[API]', title: 'GET /health', description: 'サービスの稼働状態を確認', x: 230, y: 8 },
-            { id: 'd3', displayId: 'N03', role: 'api', kind: 'agent', label: '[API]', title: 'POST /api/workflows', description: 'ワークフロー設定を更新', x: 230, y: 86 },
-            { id: 'd4', displayId: 'N04', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/auth/session', description: '認証セッションを発行', x: 230, y: 164 },
-            { id: 'd5', displayId: 'N05', role: 'api', kind: 'agent', label: '[AGENT]', title: 'GET /api/metrics', description: '運用メトリクスを集計', x: 230, y: 242 },
-            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[CACHE]', title: 'Redis', description: 'セッションと短期キャッシュ', x: 600, y: 72 },
-            { id: 'd7', displayId: 'N07', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: '設定・ユーザー・メトリクス', x: 600, y: 202 }
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'ブラウザ', description: '画面操作とログイン', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'none', label: '[API]', title: 'POST /api/document-shares', description: '共有権限を設定', x: 230, y: 10 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'none', label: '[API]', title: 'GET /api/documents', description: 'ドキュメント一覧を取得', x: 230, y: 130 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'none', label: '[API]', title: 'POST /api/d1/profile', description: '会員プロフィールを取得・更新', x: 230, y: 250 },
+            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'Cloudflare D1', description: 'ドキュメント・会員データ', x: 600, y: 137 }
           ],
           wires: [
-            { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' }, { from: 'd1', to: 'd5' },
-            { from: 'd2', to: 'd6' }, { from: 'd3', to: 'd7' }, { from: 'd4', to: 'd6' }, { from: 'd5', to: 'd7' }
+            { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' },
+            { from: 'd2', to: 'd5' }, { from: 'd3', to: 'd5' }, { from: 'd4', to: 'd5' }
           ]
         }
       },
       seikyu_kappo: {
         workflow: {
-          note: '請求管理の取込から発行までの接点を編集するビュー',
+          note: 'データ取込から集計・出力までの接点を編集するビュー',
           groups: [
-            { label: 'BILLING INTAKE', left: 20, top: 105, width: 405, height: 390 },
-            { label: 'APPROVAL & ISSUE', left: 425, top: 105, width: 425, height: 390 }
+            { label: 'INTAKE & NORMALIZE', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'REVIEW & EXPORT', left: 425, top: 105, width: 425, height: 390 }
           ],
           nodes: [
-            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'agent', title: '請求データを取込', description: '取引先データと明細を読み込む' },
-            { id: 'n2', displayId: 'N02', x: 260, y: 295, kind: 'none', title: '明細を検算', description: '金額と税区分の整合性を確認する' },
-            { id: 'n3', displayId: 'N03', x: 475, y: 150, kind: 'chat', title: '承認待ちに登録', description: '担当者へ確認事項を提示する' },
-            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'agent', title: '請求書を発行', description: '承認済みの請求書を生成する' }
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'データ取込', description: '銀行明細・請求書PDFを取込' },
+            { id: 'n2', displayId: 'N02', x: 260, y: 295, kind: 'none', title: '正規化・突合', description: '取引先・金額の整合性を確認' },
+            { id: 'n3', displayId: 'N03', x: 475, y: 150, kind: 'none', title: 'レビュー', description: '担当者が内容を確認・保存' },
+            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'none', title: '集計・出力', description: 'ダッシュボード表示とエクスポート' }
           ],
           wires: [
             { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n2', to: 'n3' }, { id: 'w3', from: 'n3', to: 'n4' }
@@ -1015,37 +1007,36 @@
           nextId: 5
         },
         ui: {
-          initials: 'SK', brand: 'seikyu_kappo', subtitle: 'Billing workspace', workspace: 'Invoice control room', updated: 'Updated 2 min ago',
-          eyebrow: 'OVERVIEW / BILLING', title: '請求処理の進捗', description: '請求の取込状況、承認待ち、発行実績を確認できます。', filter: '今月',
+          initials: 'SK', brand: 'seikyu_kappo', subtitle: '請求書整理', workspace: '経理レビュー', updated: 'Updated 2 min ago',
+          eyebrow: 'OVERVIEW / 請求書整理', title: '請求書整理の状況', description: '取込・レビュー・銀行照合の状況を確認できます。', filter: '今月',
           sources: [
-            { name: '取引先', meta: '86 accounts' }, { name: '請求明細', meta: '1,284 lines' },
-            { name: '承認キュー', meta: '24 pending' }, { name: '発行履歴', meta: '342 invoices' }
+            { name: '取引先(vendors)', meta: '' }, { name: '明細記録(records)', meta: '' },
+            { name: '銀行照合(bank-matches)', meta: '' }
           ],
           kpis: [
-            { label: '処理中の請求', note: '-14 today', value: '136', unit: '件', progress: 64 },
-            { label: '今月の請求額', note: '+6.2%', value: '12.8', unit: 'M円', progress: 71, color: '#6d858d' },
-            { label: '自動照合率', note: 'target 90%', value: '92', unit: '%', progress: 92, color: '#b06a2c' }
+            { label: '未レビュー件数', note: '', value: '—', unit: '', progress: 40 },
+            { label: '銀行照合済み', note: '', value: '—', unit: '', progress: 55, color: '#6d858d' },
+            { label: '出力済み', note: '', value: '—', unit: '', progress: 30, color: '#b06a2c' }
           ],
           activities: [
-            { name: '9月分 定期請求', status: '取込済み', progress: 82 },
-            { name: '個別契約の明細確認', status: '承認待ち', progress: 56 },
-            { name: '請求書 PDF 発行', status: '準備中', progress: 34, color: '#b06a2c' }
+            { name: '明細インポート(transfers/import)', status: '実装済み', progress: 100 },
+            { name: '銀行CSV照合', status: '実装済み', progress: 100 },
+            { name: 'エクスポート機能', status: '実装済み', progress: 100 }
           ],
-          statuses: [{ name: '明細同期', value: '正常' }, { name: '承認ワークフロー', value: '処理中' }, { name: '外部送信', value: '待機中' }]
+          statuses: [{ name: '取込', value: '正常' }, { name: 'レビュー', value: '正常' }, { name: '出力', value: '正常' }]
         },
         data: {
-          eyebrow: 'REQUEST PATH', title: '請求取込から外部送信まで', footer: 'operator → API → invoice store', ariaLabel: '担当者の操作から請求APIを経由して保存先へ至るデータフロー',
+          eyebrow: 'REQUEST PATH', title: '取込からレビュー・出力まで', footer: 'operator → API → data/', ariaLabel: '担当者の操作から実在のAPIルートを経由してローカルデータへ至るデータフロー',
           nodes: [
-            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: '管理画面', description: '担当者の取込と承認操作', x: 18, y: 137 },
-            { id: 'd2', displayId: 'N02', role: 'api', kind: 'agent', label: '[API]', title: 'POST /api/invoices', description: '請求データを登録する', x: 230, y: 20 },
-            { id: 'd3', displayId: 'N03', role: 'api', kind: 'none', label: '[API]', title: 'POST /api/validate', description: '明細と税区分を検算する', x: 230, y: 128 },
-            { id: 'd4', displayId: 'N04', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/approvals', description: '承認依頼と確認事項を処理する', x: 230, y: 236 },
-            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: '取引先・明細・承認履歴', x: 600, y: 72 },
-            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[FILES]', title: 'Invoice Storage', description: '請求書PDFと送信記録', x: 600, y: 202 }
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'レビュー画面', description: '担当者の取込・レビュー操作', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'none', label: '[API]', title: 'POST /api/transfers/import', description: '明細データを取込', x: 230, y: 10 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'none', label: '[API]', title: 'GET /api/dashboard', description: '集計状況を取得', x: 230, y: 130 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'none', label: '[API]', title: 'POST /api/review', description: 'レビュー結果を保存', x: 230, y: 250 },
+            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[FILES]', title: 'data/ (gitignore対象)', description: '請求書・明細。commit対象外', x: 600, y: 137 }
           ],
           wires: [
             { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' },
-            { from: 'd2', to: 'd5' }, { from: 'd3', to: 'd5' }, { from: 'd3', to: 'd6' }, { from: 'd4', to: 'd6' }
+            { from: 'd2', to: 'd5' }, { from: 'd4', to: 'd5' }
           ]
         }
       }
