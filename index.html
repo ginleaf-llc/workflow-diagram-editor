@@ -1,468 +1,1580 @@
-<title>ワークフロー図エディタ</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap">
-<style>
-  :root {
-    --canvas: #f4f2ee; --dot: #ddd8ce; --card: #ffffff; --card-border: #e6e2d8;
-    --ink: #21201c; --muted: #79756a; --line: #918b80;
-    --shadow: 0 1px 2px rgba(30,26,15,0.05), 0 8px 20px -8px rgba(30,26,15,0.18);
-    --toolbar: #ffffff;
-    --agent: #7c4ded; --agent-soft: #f1ecff;
-    --chat: #2166e8; --chat-soft: #e9f0ff;
-    --none: #8a8577; --none-soft: #ece9e0;
-    --future: #b34ded; --future-soft: #f7ecff;
-    --danger: #b23b3b; --danger-soft: #fbe9e7;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #17161a; --dot: #2a2932; --card: #211f26; --card-border: #35333c;
-      --ink: #ece9e4; --muted: #a29d90; --line: #6c6779; --toolbar: #1b1a1f;
-      --agent: #b79bff; --agent-soft: #2c2440;
-      --chat: #7fabff; --chat-soft: #1c2b45;
-      --none: #a8a396; --none-soft: #2b2924;
-      --future: #e0a3ff; --future-soft: #3a2545;
-      --danger: #e2867a; --danger-soft: #2e1c1a;
+<!-- 方向性: 左のアプリ一覧で選択コンテキストを固定し、右側に3ビューと編集状態を展開する案。 -->
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Workflow Diagram Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root {
+      --canvas: #eef0f2;
+      --dot: #cbd1d6;
+      --card: #ffffff;
+      --border: #d7dbe0;
+      --ink: #14181c;
+      --muted: #5b6570;
+      --line: #87919a;
+      --teal: #0e6e73;
+      --teal-soft: #e5f0f1;
+      --chat: #3d6672;
+      --chat-soft: #e8eff1;
+      --amber: #b06a2c;
+      --amber-soft: #fbefe5;
+      --neutral: #65717b;
+      --neutral-soft: #eef0f2;
+      --shadow: 0 1px 2px rgba(20, 24, 28, .08);
     }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #17161a; --dot: #2a2932; --card: #211f26; --card-border: #35333c;
-    --ink: #ece9e4; --muted: #a29d90; --line: #6c6779; --toolbar: #1b1a1f;
-    --agent: #b79bff; --agent-soft: #2c2440;
-    --chat: #7fabff; --chat-soft: #1c2b45;
-    --none: #a8a396; --none-soft: #2b2924;
-    --future: #e0a3ff; --future-soft: #3a2545;
-    --danger: #e2867a; --danger-soft: #2e1c1a;
-  }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0; background: var(--canvas); color: var(--ink);
-    font-family: 'Inter', -apple-system, "Segoe UI", sans-serif;
-    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-  }
 
-  .toolbar {
-    flex: 0 0 auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    padding: 10px 14px; background: var(--toolbar); border-bottom: 1px solid var(--card-border);
-    z-index: 20;
-  }
-  .toolbar h1 { font: 700 14px/1 'Space Grotesk', sans-serif; margin: 0 14px 0 0; white-space: nowrap; }
-  .toolbar button {
-    font: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 8px;
-    border: 1px solid var(--card-border); background: var(--card); color: var(--ink); cursor: pointer;
-  }
-  .toolbar button:hover { border-color: var(--line); }
-  .toolbar button.primary { background: var(--agent); border-color: var(--agent); color: #fff; }
-  .toolbar button.active { background: var(--agent-soft); border-color: var(--agent); color: var(--agent); }
-  .toolbar .sep { width: 1px; height: 22px; background: var(--card-border); margin: 0 2px; }
-  .toolbar .hint { font-size: 11.5px; color: var(--muted); margin-left: auto; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 13px "Public Sans", "Noto Sans JP", system-ui, sans-serif;
+    }
+    button { font: inherit; }
 
-  .canvas-scroll {
-    flex: 1 1 auto; overflow: auto; position: relative;
-    background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.2px);
-    background-size: 22px 22px;
-  }
-  .board { position: relative; width: 2400px; height: 1400px; }
-  svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .wire-hit { stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: pointer; }
-  .wire-visible { stroke: var(--line); stroke-width: 2; fill: none; marker-end: url(#wf-arrow); }
-  .wire-del {
-    fill: var(--danger-soft); stroke: var(--danger); stroke-width: 1.5; cursor: pointer; pointer-events: all;
-  }
-  .wire-del-x { fill: var(--danger); font: 700 11px Inter, sans-serif; pointer-events: none; }
+    .app-panel,
+    .bar,
+    .mast,
+    .note,
+    .workflow-mode,
+    .add-node,
+    .workflow-editor,
+    .other h2,
+    .flow-card,
+    .group label,
+    .node-id,
+    .node span {
+      font-family: "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
 
-  .card {
-    position: absolute; width: 190px; background: var(--card); border: 1px solid var(--card-border);
-    border-radius: 16px; box-shadow: var(--shadow); padding: 14px 15px 12px; cursor: grab; user-select: none;
-    touch-action: none;
-  }
-  .card.dragging { cursor: grabbing; box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 16px 32px -8px rgba(0,0,0,0.28); z-index: 10; }
-  .card.connect-src { outline: 2px solid var(--agent); outline-offset: 3px; }
-  .accent-bar { position: absolute; top: 0; left: 16px; right: 16px; height: 4px; border-radius: 0 0 4px 4px; }
-  .card.agent .accent-bar { background: var(--agent); } .card.agent .kind { background: var(--agent-soft); color: var(--agent); }
-  .card.chat .accent-bar { background: var(--chat); } .card.chat .kind { background: var(--chat-soft); color: var(--chat); }
-  .card.none .accent-bar { background: var(--none); } .card.none .kind { background: var(--none-soft); color: var(--none); }
-  .card.future .accent-bar { background: var(--future); } .card.future .kind { background: var(--future-soft); color: var(--future); }
-  .card.future { border-style: dashed; }
+    .mast {
+      height: 82px;
+      background: var(--ink);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .mast h1 { font-size: 15px; margin: 0; width: auto; }
+    .mast h1 span {
+      display: block;
+      color: #9aa4ad;
+      font-size: 9px;
+      letter-spacing: .14em;
+      margin-bottom: 5px;
+    }
+    .meta { text-align: right; color: #9aa4ad; font-size: 10px; }
+    .meta b { display: block; color: white; font-size: 12px; margin-bottom: 4px; }
 
-  .card .del {
-    position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%;
-    border: none; background: transparent; color: var(--muted); font-size: 13px; line-height: 1;
-    cursor: pointer; display: none; align-items: center; justify-content: center;
-  }
-  .card:hover .del { display: flex; }
-  .card .del:hover { background: var(--danger-soft); color: var(--danger); }
+    .shell {
+      display: grid;
+      grid-template-columns: 245px minmax(0, 1fr);
+      height: 100vh;
+      min-height: 0;
+    }
+    .app-panel {
+      display: flex;
+      min-height: 0;
+      flex-direction: column;
+      padding: 18px 14px 14px;
+      background: #f8f9fa;
+      border-right: 1px solid var(--border);
+    }
+    .app-panel-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 7px;
+    }
+    .app-panel-header strong { font-size: 11px; letter-spacing: .1em; }
+    .app-panel-header small { color: var(--muted); font-size: 9px; }
+    .app-search {
+      position: relative;
+      display: block;
+      margin: 14px 5px 12px;
+    }
+    .app-search input {
+      width: 100%;
+      padding: 9px 10px 9px 30px;
+      color: var(--ink);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      outline: none;
+      font-size: 11px;
+    }
+    .app-search input:focus { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft); }
+    .app-search input::placeholder { color: #89939c; }
+    .app-search-icon {
+      position: absolute;
+      top: 10px;
+      left: 11px;
+      width: 11px;
+      height: 11px;
+      border: 1.5px solid var(--muted);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .app-search-icon::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      bottom: -3px;
+      width: 5px;
+      height: 1.5px;
+      background: var(--muted);
+      transform: rotate(45deg);
+      transform-origin: left center;
+    }
+    .app-list {
+      display: grid;
+      min-height: 0;
+      flex: 1 1 auto;
+      gap: 4px;
+      overflow-y: auto;
+      padding: 2px 4px 6px;
+      scrollbar-color: #b8c0c6 transparent;
+      scrollbar-width: thin;
+    }
+    .app {
+      width: 100%;
+      min-height: 57px;
+      padding: 10px 11px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      text-align: left;
+      cursor: pointer;
+      transition: background .1s ease-out;
+    }
+    .app:hover { background: #f0f3f4; }
+    .app b { display: block; overflow: hidden; color: var(--ink); font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .app small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .app.active {
+      background: var(--card);
+      border-color: var(--border);
+      box-shadow: inset 2px 0 0 var(--teal);
+    }
+    .app.active b { color: var(--teal); }
+    .app-panel-footer {
+      margin: 10px 5px 0;
+      padding: 12px 7px 0;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+    .app-panel-footer strong { display: block; color: var(--ink); font-size: 10px; }
 
-  .card .title {
-    font: 700 14px/1.4 'Space Grotesk', sans-serif; margin-top: 6px; outline: none; cursor: text;
-    border-radius: 4px; padding: 1px 3px; margin-left: -3px;
-  }
-  .card .sub {
-    font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; outline: none; cursor: text;
-    border-radius: 4px; padding: 1px 3px; margin-left: -3px; min-height: 14px;
-  }
-  .card .title:focus, .card .sub:focus, .card .screen:focus { background: var(--none-soft); }
-  .card .kind {
-    display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 10px; font-weight: 700;
-    padding: 2px 8px; border-radius: 999px; cursor: pointer; border: none;
-  }
-  .card .screen {
-    display: block; margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--card-border);
-    font-size: 10px; color: var(--muted); outline: none; cursor: text; min-height: 12px;
-  }
+    .workspace {
+      display: grid;
+      min-width: 0;
+      min-height: 0;
+      grid-template-rows: 58px minmax(0, 1fr);
+    }
 
-  .connect-banner {
-    position: fixed; top: 54px; left: 50%; transform: translateX(-50%);
-    background: var(--agent); color: #fff; font-size: 12px; font-weight: 600;
-    padding: 6px 14px; border-radius: 999px; z-index: 30; box-shadow: var(--shadow);
-    display: none;
-  }
-  .connect-banner.show { display: block; }
+    .bar {
+      min-width: 0;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 4px;
+    }
+    .bar strong { margin-right: 24px; color: var(--ink); font-size: 12px; letter-spacing: .02em; }
+    .tab {
+      border: 0;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      padding: 20px 12px 18px;
+      color: var(--muted);
+      font-weight: 700;
+      cursor: pointer;
+      transition: color .1s ease-out, border-color .1s ease-out;
+    }
+    .tab:hover { color: var(--ink); }
+    .tab.active { background: transparent; color: var(--teal); border-bottom-color: var(--teal); }
+    .bar .tools { margin-left: auto; display: flex; gap: 7px; }
+    .tools button {
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 4px;
+      padding: 8px 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tools .primary { color: white; background: var(--teal); border-color: var(--teal); }
+    .tools button:disabled { cursor: not-allowed; opacity: .52; }
 
-  .export-panel {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40;
-    display: none; align-items: center; justify-content: center; padding: 24px;
-  }
-  .export-panel.show { display: flex; }
-  .export-box {
-    background: var(--card); border-radius: 14px; padding: 18px; width: min(760px, 100%);
-    max-height: 80vh; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow);
-  }
-  .export-box h2 { font: 700 15px 'Space Grotesk', sans-serif; margin: 0; }
-  .export-box textarea {
-    flex: 1; min-height: 300px; font: 11px/1.5 ui-monospace, monospace; padding: 10px;
-    border: 1px solid var(--card-border); border-radius: 8px; background: var(--canvas); color: var(--ink);
-    resize: vertical;
-  }
-  .export-box .row { display: flex; gap: 8px; justify-content: flex-end; }
-</style>
+    .stage {
+      min-height: 0;
+      position: relative;
+      overflow: auto;
+      background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.2px);
+      background-size: 22px 22px;
+    }
+    .view { will-change: opacity, transform; }
+    .view.is-entering { animation: view-enter .18s ease-out both; }
+    .view.is-leaving { animation: view-leave .18s ease-out both; }
+    @keyframes view-enter {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes view-leave {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-8px); }
+    }
+    .board { position: relative; width: 1230px; min-height: 700px; padding: 24px 30px; }
+    .workflow-canvas {
+      position: relative;
+      width: 860px;
+      height: 620px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .workflow-canvas .note { top: 0; left: 0; }
+    .workflow-canvas .group { z-index: 0; }
+    .workflow-canvas > svg { position: absolute; inset: 0; z-index: 1; }
+    .workflow-canvas .node { z-index: 2; width: 170px; }
+    .workflow-canvas .node-actions { z-index: 3; }
+    .workflow-mode {
+      position: absolute;
+      top: 3px;
+      right: 114px;
+      display: inline-flex;
+      z-index: 4;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 9px;
+      visibility: hidden;
+      opacity: 0;
+      color: var(--teal);
+      background: var(--card);
+      border: 1px solid var(--teal);
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 800;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity .18s ease-out, transform .18s ease-out, visibility .18s ease-out;
+    }
+    .workflow-mode::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--teal);
+    }
+    .add-node {
+      position: absolute;
+      top: 3px;
+      right: 0;
+      display: inline-flex;
+      z-index: 4;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      color: white;
+      visibility: hidden;
+      opacity: 0;
+      background: var(--teal);
+      border: 1px solid var(--teal);
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 800;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity .18s ease-out, transform .18s ease-out, visibility .18s ease-out;
+    }
+    .add-node::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border: 1px solid #ffffffaa;
+      border-radius: 2px;
+      background: linear-gradient(#fff, #fff) center / 7px 1px no-repeat, linear-gradient(#fff, #fff) center / 1px 7px no-repeat;
+    }
+    .board.editing .workflow-canvas {
+      background: #e5f0f166;
+      border-color: var(--teal);
+      box-shadow: inset 0 0 0 2px #e5f0f199;
+    }
+    .board.editing .workflow-mode,
+    .board.editing .add-node {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .node:hover { border-color: var(--teal); transform: translateY(-1px); }
+    .board.editing .node { cursor: pointer; }
+    .workflow-node {
+      user-select: none;
+      touch-action: none;
+    }
+    .board.editing .workflow-node { cursor: grab; }
+    .board.editing .workflow-node.dragging {
+      z-index: 5;
+      cursor: grabbing;
+      transform: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, .1), 0 16px 32px -8px rgba(0, 0, 0, .22);
+      transition: none;
+    }
+    .board.editing .node:hover,
+    .board.editing .node.selected {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 2px var(--teal-soft), var(--shadow);
+    }
+    .node-actions {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transform: translateY(-3px);
+      transition: opacity .15s ease, transform .15s ease;
+    }
+    .board.editing .node:hover .node-actions,
+    .board.editing .node.selected .node-actions {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .node-action {
+      position: relative;
+      display: grid;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      place-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .node-action:hover { border-color: var(--accent); background: var(--soft); }
+    .node-action.edit::before {
+      content: "";
+      width: 9px;
+      height: 4px;
+      border: 1.5px solid var(--accent);
+      border-radius: 1px;
+      transform: rotate(-45deg);
+    }
+    .node-action.edit::after {
+      content: "";
+      position: absolute;
+      width: 3px;
+      height: 1.5px;
+      background: var(--accent);
+      transform: translate(-4px, 4px) rotate(-45deg);
+    }
+    .node-action.delete::before,
+    .node-action.delete::after {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 1.5px;
+      background: var(--accent);
+      transform: rotate(45deg);
+    }
+    .node-action.delete::after { transform: rotate(-45deg); }
+    .workflow-editor {
+      position: absolute;
+      top: 24px;
+      left: 900px;
+      width: 300px;
+      padding: 18px;
+      visibility: hidden;
+      opacity: 0;
+      color: var(--ink);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: var(--shadow);
+      transform: translateX(16px);
+      transition: opacity .2s ease-out, transform .2s ease-out, visibility .2s ease-out;
+    }
+    .board.editing .workflow-editor {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .workflow-editor[aria-hidden="true"] {
+      visibility: hidden;
+      opacity: 0;
+      transform: translateX(16px);
+      pointer-events: none;
+    }
+    .workflow-editor.is-switching { animation: editor-switch .2s ease-out both; }
+    @keyframes editor-switch {
+      from { opacity: .35; transform: translateX(12px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .editor-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .editor-kicker {
+      display: block;
+      color: var(--teal);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .14em;
+    }
+    .editor-header h2 { margin: 5px 0 0; font-size: 15px; }
+    .editor-status {
+      flex: 0 0 auto;
+      padding: 4px 6px;
+      color: var(--teal);
+      background: transparent;
+      border: 1px solid var(--teal);
+      border-radius: 2px;
+      font-size: 8px;
+      font-weight: 800;
+    }
+    .editor-form { display: grid; gap: 13px; padding-top: 16px; }
+    .editor-field { display: grid; gap: 6px; }
+    .editor-field label { color: var(--muted); font-size: 9px; font-weight: 800; }
+    .editor-field input,
+    .editor-field textarea,
+    .editor-field select {
+      width: 100%;
+      padding: 8px 9px;
+      color: var(--ink);
+      background: #fafbfc;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      outline: none;
+      font-size: 10px;
+    }
+    .editor-field textarea { min-height: 54px; resize: vertical; line-height: 1.5; }
+    .editor-field input:focus,
+    .editor-field textarea:focus,
+    .editor-field select:focus { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft); }
+    .editor-actions { display: flex; justify-content: flex-end; gap: 7px; padding-top: 4px; }
+    .editor-actions button {
+      padding: 7px 9px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 9px;
+      font-weight: 800;
+    }
+    .editor-actions .save { color: white; background: var(--teal); border-color: var(--teal); }
+    .editor-hint { margin: 13px 0 0; color: var(--muted); font-size: 9px; line-height: 1.55; }
+    .note {
+      position: absolute;
+      top: 24px;
+      left: 30px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+    }
+    .note b { display: block; font-size: 11px; }
+    .note small { color: var(--muted); }
+    .group {
+      position: absolute;
+      border: 1px dashed #b8c0c6;
+      border-radius: 4px;
+      background: #fff5;
+    }
+    .group label {
+      position: absolute;
+      left: 15px;
+      top: 12px;
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: .08em;
+    }
+    .node {
+      position: absolute;
+      width: 186px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 13px 12px;
+      box-shadow: var(--shadow);
+      transition: border-color .1s ease-out, transform .1s ease-out, box-shadow .1s ease-out;
+    }
+    .node-id {
+      display: block;
+      color: var(--muted);
+      font-size: 8px;
+      line-height: 1;
+      letter-spacing: .12em;
+    }
+    .node h3 {
+      margin: 8px 0 4px;
+      padding-right: 38px;
+      color: var(--ink);
+      font: 700 12px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
+    .node p {
+      font: 10px/1.5 "Public Sans", "Noto Sans JP", system-ui, sans-serif;
+      color: var(--muted);
+      margin: 0;
+    }
+    .node span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      font-weight: 800;
+      line-height: 1;
+      border-radius: 0;
+      margin-top: 10px;
+      padding: 0;
+      color: var(--accent);
+      background: transparent;
+      letter-spacing: .02em;
+    }
+    .node span::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      background: var(--accent);
+    }
+    .agent { --accent: var(--teal); --soft: var(--teal-soft); }
+    .chat { --accent: var(--chat); --soft: var(--chat-soft); }
+    .future { --accent: var(--amber); --soft: var(--amber-soft); border-style: dashed; }
+    .none { --accent: var(--neutral); --soft: var(--neutral-soft); }
+    .flow-board > svg { position: absolute; inset: 0; }
+    .wire { fill: none; stroke: var(--line); stroke-width: 2; marker-end: url(#a); }
 
-<div class="toolbar">
-  <h1>ワークフロー図エディタ</h1>
-  <button id="btn-add" class="primary">+ カード</button>
-  <div class="sep"></div>
-  <button id="btn-connect">矢印でつなぐ</button>
-  <div class="sep"></div>
-  <button id="btn-export">HTMLを書き出す</button>
-  <button id="btn-download">ダウンロード</button>
-  <div class="sep"></div>
-  <button id="btn-clear">全部消す</button>
-  <span class="hint" id="hint">カードをドラッグで移動・文字をダブルクリックで編集・カテゴリをクリックで色を切替</span>
-</div>
+    .other {
+      margin: 35px auto;
+      width: min(900px, 90%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+    .other h2 { margin: 0 0 6px; }
+    .other > p { color: var(--muted); }
+    .hidden { display: none; }
 
-<div class="canvas-scroll" id="scroll">
-  <div class="board" id="board">
-    <svg class="wires" id="wires">
-      <defs>
-        <marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--line)"></path>
-        </marker>
-      </defs>
-      <g id="wire-layer"></g>
-    </svg>
-  </div>
-</div>
+    .empty-state {
+      display: grid;
+      min-height: 260px;
+      place-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 32px;
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: var(--shadow);
+    }
+    .empty-state .empty-kicker {
+      color: var(--amber);
+      font: 800 9px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+      letter-spacing: .14em;
+    }
+    .empty-state h3 { margin: 0; font-size: 14px; }
+    .empty-state p { margin: 0; color: var(--muted); font-size: 11px; }
+    .workflow-canvas .empty-state {
+      position: absolute;
+      top: 105px;
+      left: 20px;
+      width: 820px;
+      min-height: 360px;
+      margin: 0;
+    }
 
-<div class="connect-banner" id="connect-banner">1枚目のカードをクリック → 2枚目のカードをクリックすると矢印を引きます</div>
+    /* UI preview: a neutral product surface inside the architecture shell. */
+    .ui-preview {
+      display: grid;
+      grid-template-columns: 184px minmax(0, 1fr);
+      min-height: 405px;
+      margin-top: 20px;
+      overflow: hidden;
+      color: var(--ink);
+      background: #f7f8f9;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: var(--shadow);
+    }
+    .ui-sidebar {
+      padding: 18px 14px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+    }
+    .ui-brand { display: flex; align-items: center; gap: 9px; margin: 1px 5px 24px; }
+    .ui-logo {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 4px;
+      color: #fff;
+      background: var(--teal);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+    .ui-brand strong { display: block; color: var(--ink); font: 700 12px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-brand small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+    .ui-section-label {
+      margin: 0 7px 8px;
+      color: #7c8790;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .12em;
+    }
+    .ui-source-nav { display: grid; gap: 4px; }
+    .ui-source {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 9px 8px;
+      color: var(--muted);
+      border-radius: 4px;
+      text-decoration: none;
+      transition: background .1s ease-out;
+    }
+    .ui-source:hover { background: #f0f3f4; }
+    .ui-source.active { color: var(--ink); background: var(--teal-soft); }
+    .ui-source-mark {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 auto;
+      margin-top: 4px;
+      border: 1px solid #aeb7bf;
+    }
+    .ui-source.active .ui-source-mark { border-color: var(--teal); background: var(--teal); }
+    .ui-source b { display: block; font-size: 10px; font-weight: 700; }
+    .ui-source small { display: block; margin-top: 3px; color: #9aa2aa; font-size: 9px; }
+    .ui-sidebar-footer {
+      margin-top: 24px;
+      padding: 14px 7px 0;
+      border-top: 1px solid var(--border);
+    }
+    .ui-sidebar-footer span { display: block; color: #9aa2aa; font-size: 9px; }
+    .ui-sidebar-footer b { display: block; margin-top: 5px; color: var(--ink); font: 700 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-sidebar-footer small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .ui-main { min-width: 0; padding: 23px 24px 20px; background: #f7f8f9; }
+    .ui-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+    .ui-eyebrow { color: var(--teal); font: 700 8px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: .13em; }
+    .ui-main h3 { margin: 5px 0 3px; color: var(--ink); font: 700 17px/1.25 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: -.02em; }
+    .ui-main p { margin: 0; color: var(--muted); font: 10px/1.5 "Public Sans", "Noto Sans JP", system-ui, sans-serif; }
+    .ui-filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      padding: 7px 9px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
+    .ui-filter-caret {
+      width: 6px;
+      height: 6px;
+      border-right: 1px solid var(--muted);
+      border-bottom: 1px solid var(--muted);
+      transform: rotate(45deg) translateY(-2px);
+    }
+    .ui-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
+    .ui-kpi { padding: 13px 14px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
+    .ui-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .ui-kpi-label { color: var(--muted); font: 600 9px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-kpi-note { color: #7c8790; font: 8px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; white-space: nowrap; }
+    .ui-kpi strong { display: block; margin-top: 8px; color: var(--ink); font: 700 23px/1 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: -.05em; }
+    .ui-kpi strong small { margin-left: 3px; color: var(--muted); font: 500 10px/1 "Public Sans", "Noto Sans JP", system-ui, sans-serif; letter-spacing: 0; }
+    .ui-kpi-line { height: 4px; margin-top: 10px; overflow: hidden; background: #e5e8eb; border-radius: 2px; }
+    .ui-kpi-line i { display: block; width: 68%; height: 100%; background: var(--teal); border-radius: inherit; }
+    .ui-kpi:nth-child(2) .ui-kpi-line i { width: 52%; background: #6d858d; }
+    .ui-kpi:nth-child(3) .ui-kpi-line i { width: 84%; background: var(--amber); }
+    .ui-panels { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(150px, .75fr); gap: 10px; margin-top: 10px; }
+    .ui-panel { min-width: 0; padding: 13px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
+    .ui-panel h4 { margin: 0 0 11px; color: var(--ink); font: 700 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-activity { display: grid; gap: 8px; }
+    .ui-activity-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+    .ui-activity-row b { overflow: hidden; color: var(--ink); font: 600 9px/1.3 "Public Sans", "Noto Sans JP", system-ui, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+    .ui-activity-row small { color: var(--muted); font: 8px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-activity-bar { height: 4px; margin-top: 4px; overflow: hidden; background: #e9ecee; border-radius: 2px; }
+    .ui-activity-bar i { display: block; width: 74%; height: 100%; background: var(--teal); border-radius: inherit; }
+    .ui-activity-row:nth-child(2) .ui-activity-bar i { width: 49%; }
+    .ui-activity-row:nth-child(3) .ui-activity-bar i { width: 88%; background: var(--amber); }
+    .ui-status-list { display: grid; gap: 10px; }
+    .ui-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .ui-status span { color: var(--muted); font-size: 9px; }
+    .ui-status b { color: var(--ink); font: 600 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
+    .ui-status b:before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 5px 1px 0; background: var(--teal); }
+    .ui-status:nth-child(2) b:before { background: var(--amber); }
+    .ui-status:nth-child(3) b:before { background: #87919a; }
 
-<div class="export-panel" id="export-panel">
-  <div class="export-box">
-    <h2>書き出したHTML</h2>
-    <textarea id="export-text" readonly></textarea>
-    <div class="row">
-      <button id="btn-export-copy">コピー</button>
-      <button id="btn-export-close" class="primary">閉じる</button>
+    /* Data preview: request paths keep the same card-and-wire language as the workflow. */
+    .flow-card {
+      margin-top: 20px;
+      overflow-x: auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    .flow-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 17px 18px 0; }
+    .flow-eyebrow { color: var(--teal); font-size: 8px; font-weight: 800; letter-spacing: .14em; }
+    .flow-header h3 { margin: 5px 0 0; font-size: 14px; }
+    .flow-legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; color: var(--muted); font-size: 9px; }
+    .flow-legend span { white-space: nowrap; }
+    .legend-dot { display: inline-block; width: 7px; height: 7px; margin-right: 4px; background: var(--neutral); }
+    .legend-dot.api { background: var(--teal); }
+    .legend-dot.session { background: var(--chat); }
+    .flow-board { position: relative; width: 820px; height: 360px; }
+    .flow-board svg { width: 820px; height: 360px; }
+    .data-wire { stroke: var(--line); marker-end: url(#dataArrow); }
+    .flow-column-label {
+      position: absolute;
+      top: 15px;
+      color: #7c8790;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .13em;
+    }
+    .flow-column-label.client { left: 28px; }
+    .flow-column-label.endpoint { left: 240px; }
+    .flow-column-label.storage { left: 610px; }
+    .data-node { width: 164px; padding: 11px 12px 10px; border-radius: 4px; }
+    .data-node h3 { font-size: 11px; margin-top: 8px; }
+    .data-node p { font-size: 9px; }
+    .data-node span { margin-top: 8px; font-size: 8px; }
+    .browser-node { left: 18px; top: 137px; }
+    .course-api { left: 230px; top: 20px; }
+    .session-api { left: 230px; top: 128px; }
+    .report-api { left: 230px; top: 236px; }
+    .database-node { left: 600px; top: 72px; }
+    .object-node { left: 600px; top: 202px; }
+    .flow-footer { display: flex; align-items: center; gap: 8px; padding: 0 18px 16px; color: var(--muted); font-size: 9px; }
+    .flow-footer code { padding: 3px 6px; color: var(--ink); background: var(--neutral-soft); border: 1px solid var(--border); border-radius: 2px; font: 9px "JetBrains Mono", ui-monospace, monospace; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .mast { height: 72px; padding: 14px 16px; }
+      .shell { grid-template-columns: 220px minmax(0, 1fr); height: 100vh; }
+      .app-panel { padding: 14px 9px 10px; }
+      .meta { display: none; }
+      .bar { padding: 0 14px; }
+      .bar strong { margin-right: 8px; }
+      .bar .tools { display: none; }
+      .other { width: calc(100% - 28px); padding: 20px; }
+      .ui-preview { grid-template-columns: 155px minmax(0, 1fr); }
+      .ui-panels { grid-template-columns: 1fr; }
+      .workflow-editor { left: 875px; }
+    }
+
+    @media (min-width: 761px) and (max-width: 1500px) {
+      .board { width: 1020px; }
+      .workflow-canvas { transform: scale(.78); transform-origin: top left; }
+      .workflow-editor { left: 700px; width: 280px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="app-panel" aria-label="アプリ一覧パネル">
+      <div class="app-panel-header"><strong>APPLICATIONS</strong><small>9 repositories</small></div>
+      <label class="app-search"><span class="app-search-icon" aria-hidden="true"></span><input id="appSearch" type="search" placeholder="アプリを検索" aria-label="アプリを検索"></label>
+      <nav class="app-list" aria-label="アプリ一覧">
+        <button class="app active" data-app="aikensyu"><b>aikensyu</b><small>AI研修 / 12 diagrams</small></button>
+        <button class="app" data-app="web-service-ginleaf"><b>web-service-ginleaf</b><small>Web基盤 / 8 diagrams</small></button>
+        <button class="app" data-app="seikyu_kappo"><b>seikyu_kappo</b><small>請求管理 / 6 diagrams</small></button>
+        <button class="app" data-app="base"><b>base</b><small>共通基盤 / 15 diagrams</small></button>
+        <button class="app" data-app="kakikyogi-playground"><b>kakikyogi-playground</b><small>競技開発 / 5 diagrams</small></button>
+        <button class="app" data-app="mydocument_setup"><b>mydocument_setup</b><small>ドキュメント / 4 diagrams</small></button>
+        <button class="app" data-app="oyster-cup"><b>oyster-cup</b><small>実験環境 / 9 diagrams</small></button>
+        <button class="app" data-app="syanai"><b>syanai</b><small>社内ツール / 7 diagrams</small></button>
+        <button class="app" data-app="workflow-lab"><b>workflow-lab</b><small>検証用 / 3 diagrams</small></button>
+      </nav>
+      <div class="app-panel-footer"><strong>横断ワークスペース</strong>複数リポジトリの設計を同じ視点で確認</div>
+    </aside>
+
+    <div class="workspace">
+      <nav class="bar">
+        <strong id="context">aikensyu</strong>
+        <button class="tab" data-view="ui">アプリのUI</button>
+        <button class="tab" data-view="data">データフロー</button>
+        <button class="tab active" data-view="workflow">ワークフロー</button>
+        <div class="tools"><button>共有</button><button class="primary" id="editToggle" aria-pressed="false">編集する</button><button id="resetWorkflow" type="button">リセット</button></div>
+      </nav>
+
+        <main class="stage">
+        <section id="workflow" class="view board">
+          <div class="workflow-canvas" id="workflowCanvas">
+            <div class="note"><b id="noteTitle">aikensyu のワークフロー</b><small id="noteDescription">業務とAI機能の接点を編集するビュー</small></div>
+            <div class="workflow-mode" id="workflowMode">編集モード</div>
+            <button class="add-node" id="addNode" type="button">ノードを追加</button>
+            <div id="workflowGroups"></div>
+            <svg id="workflowWires" width="860" height="620" viewBox="0 0 860 620" aria-hidden="true"></svg>
+            <div id="workflowNodes"></div>
+          </div>
+          <aside class="workflow-editor" id="nodeEditor" aria-label="ノード編集パネル" aria-hidden="true">
+            <div class="editor-header"><div><span class="editor-kicker">NODE EDITOR</span><h2 id="editorNodeName"></h2></div><span class="editor-status" id="editorStatus">選択中</span></div>
+            <form class="editor-form" id="nodeForm">
+              <div class="editor-field"><label for="nodeTitle">タイトル</label><input id="nodeTitle" type="text"></div>
+              <div class="editor-field"><label for="nodeDescription">説明</label><textarea id="nodeDescription"></textarea></div>
+              <div class="editor-field"><label for="nodeType">種別</label><select id="nodeType"><option value="agent">AIエージェント</option><option value="chat">AIチャット</option><option value="none">AI不使用</option><option value="future">構想未実装</option></select></div>
+              <div class="editor-actions"><button id="cancelNode" type="button">キャンセル</button><button class="save" id="saveNode" type="submit">変更を保存</button></div>
+            </form>
+            <p class="editor-hint">ノードを選択して、役割と説明を調整できます。配線は既存のフローを保ったまま確認できます。</p>
+          </aside>
+        </section>
+
+    <section id="ui" class="view other hidden">
+      <h2>アプリのUI</h2>
+      <p id="uiDescription">選択アプリの主要画面を、実際のダッシュボードに近い構成で確認するビューです。</p>
+      <div id="uiContent"></div>
+    </section>
+
+    <section id="data" class="view other hidden">
+      <h2>データフロー</h2>
+      <p id="dataDescription">選択アプリ内外のデータの流れと責任境界を、リクエスト単位で確認するビューです。</p>
+      <div id="dataContent"></div>
+    </section>
+  </main>
     </div>
   </div>
-</div>
 
-<script>
-(function () {
-  "use strict";
-  const KINDS = ["agent", "chat", "none", "future"];
-  const KIND_LABEL = { agent: "AIエージェント", chat: "AIチャット", none: "AI不使用", future: "構想・未実装" };
-  const STORAGE_KEY = "workflow-canvas-editor-state-v1";
+  <script>
+    const KINDS = ['agent', 'chat', 'none', 'future'];
+    const TYPE_SHORT_LABELS = {
+      agent: '[AGENT]',
+      chat: '[CHAT]',
+      none: '[NONE]',
+      future: '[TBD]'
+    };
+    const WORKFLOW_STORAGE_PREFIX = 'workflow-editor:';
 
-  let state = loadState() || {
-    cards: [
-      { id: "c1", x: 60, y: 60, kind: "agent", title: "列判定", sub: "資料カタログの列の意味を読む", screen: "画面: 資料カタログ" },
-      { id: "c2", x: 340, y: 60, kind: "none", title: "A 集計", sub: "決定論の計算のみ", screen: "画面: KPI欄" }
-    ],
-    wires: [{ id: "w1", from: "c1", to: "c2" }],
-    nextId: 3
-  };
-
-  const board = document.getElementById("board");
-  const wireLayer = document.getElementById("wire-layer");
-  const scroll = document.getElementById("scroll");
-  const hint = document.getElementById("hint");
-  const connectBanner = document.getElementById("connect-banner");
-
-  let connectMode = false;
-  let connectFrom = null;
-  let dragCtx = null;
-
-  function saveState() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) { return null; }
-  }
-
-  function cardEl(id) { return board.querySelector('.card[data-id="' + id + '"]'); }
-  function cardCenter(c) { return { x: c.x + 95, y: c.y + 55 }; }
-
-  function edgePoint(from, to) {
-    const w = 190, h = 110;
-    const fx = from.x + w / 2, fy = from.y + h / 2;
-    const tx = to.x + w / 2, ty = to.y + h / 2;
-    const dx = tx - fx, dy = ty - fy;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      const sx = fx + (dx > 0 ? w / 2 : -w / 2);
-      return { x: sx, y: fy + dy * ((sx - fx) / (dx || 1)) };
-    }
-    const sy = fy + (dy > 0 ? h / 2 : -h / 2);
-    return { x: fx + dx * ((sy - fy) / (dy || 1)), y: sy };
-  }
-
-  function render() {
-    board.querySelectorAll(".card").forEach((el) => el.remove());
-    for (const c of state.cards) {
-      const el = document.createElement("div");
-      el.className = "card " + c.kind;
-      el.dataset.id = c.id;
-      el.style.left = c.x + "px";
-      el.style.top = c.y + "px";
-      el.innerHTML =
-        '<div class="accent-bar"></div>' +
-        '<button class="del" title="削除">&times;</button>' +
-        '<div class="title" spellcheck="false"></div>' +
-        '<div class="sub" spellcheck="false"></div>' +
-        '<span class="kind"></span>' +
-        '<div class="screen" spellcheck="false"></div>';
-      el.querySelector(".title").textContent = c.title;
-      el.querySelector(".sub").textContent = c.sub;
-      el.querySelector(".kind").textContent = KIND_LABEL[c.kind];
-      el.querySelector(".screen").textContent = c.screen;
-      board.appendChild(el);
-      wireUpCard(el, c);
-    }
-    drawWires();
-  }
-
-  function wireUpCard(el, c) {
-    const editable = ["title", "sub", "screen"];
-    for (const field of editable) {
-      const node = el.querySelector("." + field);
-      node.addEventListener("dblclick", (e) => {
-        e.stopPropagation();
-        node.contentEditable = "true";
-        node.focus();
-        document.execCommand("selectAll", false, null);
-      });
-      node.addEventListener("blur", (e) => {
-        node.contentEditable = "false";
-        const value = e.target.textContent.trim();
-        c[field] = field === "title" ? (value || "無題") : value;
-        saveState();
-      });
-      node.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && field !== "sub") { e.preventDefault(); node.blur(); }
-        if (e.key === "Escape") node.blur();
-      });
-    }
-    el.querySelector(".kind").addEventListener("click", (e) => {
-      e.stopPropagation();
-      const idx = KINDS.indexOf(c.kind);
-      c.kind = KINDS[(idx + 1) % KINDS.length];
-      el.className = "card " + c.kind;
-      el.querySelector(".kind").textContent = KIND_LABEL[c.kind];
-      saveState();
-    });
-    el.querySelector(".del").addEventListener("click", (e) => {
-      e.stopPropagation();
-      state.cards = state.cards.filter((x) => x.id !== c.id);
-      state.wires = state.wires.filter((w) => w.from !== c.id && w.to !== c.id);
-      saveState(); render();
-    });
-    el.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".del") || e.target.closest(".kind")) return;
-      if (e.target.isContentEditable) return;
-      if (connectMode) {
-        e.preventDefault();
-        handleConnectClick(c.id, el);
-        return;
+    const APP_DATA = {
+      aikensyu: {
+        workflow: {
+          note: '業務とAI機能の接点を編集するビュー',
+          groups: [
+            { label: 'CONTENT PREPARATION', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'LEARNING & REVIEW', left: 425, top: 105, width: 425, height: 390 }
+          ],
+          nodes: [
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'agent', title: '資料を解析', description: '教材候補と学習目標を抽出' },
+            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'future', title: '内容をレビュー', description: '担当者が構成を確認' },
+            { id: 'n3', displayId: 'N03', x: 460, y: 150, kind: 'chat', title: '対話型研修', description: '受講者の回答に応じて進行' },
+            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'agent', title: 'レポート生成', description: '結果と改善点をまとめる' }
+          ],
+          wires: [
+            { id: 'w1', from: 'n1', to: 'n2' },
+            { id: 'w2', from: 'n2', to: 'n3' },
+            { id: 'w3', from: 'n3', to: 'n4' }
+          ],
+          nextId: 5
+        },
+        ui: {
+          initials: 'AK', brand: 'aikensyu', subtitle: 'Learning workspace', workspace: 'AI training hub', updated: 'Updated 4 min ago',
+          eyebrow: 'OVERVIEW / AI TRAINING', title: '研修コンテンツの状況', description: 'チーム全体の作成状況と受講状況を確認できます。', filter: '今週',
+          sources: [
+            { name: '研修コース', meta: '12 sources' }, { name: '教材ライブラリ', meta: '34 documents' },
+            { name: '受講者データ', meta: '428 learners' }, { name: 'レポート', meta: '8 saved views' }
+          ],
+          kpis: [
+            { label: '公開中の教材', note: '+2 this week', value: '24', unit: '件', progress: 68 },
+            { label: '今週の受講者', note: '+18.4%', value: '428', unit: '人', progress: 52, color: '#6d858d' },
+            { label: '平均完了率', note: 'target 80%', value: '84', unit: '%', progress: 84, color: '#b06a2c' }
+          ],
+          activities: [
+            { name: '新人向け AI 基礎研修', status: '公開中', progress: 74 },
+            { name: '情報セキュリティ 2026', status: 'レビュー中', progress: 49 },
+            { name: '営業チーム向けケース演習', status: '下書き', progress: 88, color: '#b06a2c' }
+          ],
+          statuses: [{ name: '教材同期', value: '正常' }, { name: 'AI評価キュー', value: '処理中' }, { name: 'データ連携', value: '待機中' }]
+        },
+        data: {
+          eyebrow: 'REQUEST PATH', title: 'ブラウザからレポート保存まで', footer: 'browser → API → storage', ariaLabel: 'ブラウザからAPIエンドポイントを経由して保存先へ至るデータフロー',
+          nodes: [
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'ブラウザ', description: '受講者の入力と画面表示', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'agent', label: '[API]', title: 'GET /api/courses', description: 'コースと教材の一覧を取得', x: 230, y: 20 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/session', description: '回答をAI対話へ送信', x: 230, y: 128 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'agent', label: '[AGENT]', title: 'POST /api/reports', description: '学習結果のレポートを生成', x: 230, y: 236 },
+            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: 'コース・受講者・回答', x: 600, y: 72 },
+            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[FILES]', title: 'Object Storage', description: '教材ファイルと生成レポート', x: 600, y: 202 }
+          ],
+          wires: [
+            { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' },
+            { from: 'd2', to: 'd5' }, { from: 'd3', to: 'd5' }, { from: 'd3', to: 'd6' }, { from: 'd4', to: 'd6' }
+          ]
+        }
+      },
+      'web-service-ginleaf': {
+        workflow: {
+          note: 'Web基盤のリクエスト処理と運用接点を編集するビュー',
+          groups: [
+            { label: 'REQUEST & VALIDATION', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'SERVICE & PERSISTENCE', left: 425, top: 105, width: 425, height: 390 }
+          ],
+          nodes: [
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'リクエストを受信', description: 'ブラウザからの入力を受け付ける' },
+            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'agent', title: '認証を確認', description: 'セッションと権限を検証する' },
+            { id: 'n3', displayId: 'N03', x: 445, y: 150, kind: 'none', title: 'APIを実行', description: 'ルートに応じた処理を呼び出す' },
+            { id: 'n4', displayId: 'N04', x: 635, y: 295, kind: 'none', title: 'データを更新', description: '永続化層へ結果を書き込む' },
+            { id: 'n5', displayId: 'N05', x: 650, y: 150, kind: 'agent', title: 'レスポンスを返す', description: '画面に表示する形式へ整える' }
+          ],
+          wires: [
+            { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n2', to: 'n3' },
+            { id: 'w3', from: 'n3', to: 'n4' }, { id: 'w4', from: 'n4', to: 'n5' }
+          ],
+          nextId: 6
+        },
+        ui: {
+          initials: 'GS', brand: 'web-service-ginleaf', subtitle: 'Service operations', workspace: 'Ginleaf service', updated: 'Updated 11 min ago',
+          eyebrow: 'OVERVIEW / SERVICE OPS', title: 'Webサービスの稼働状況', description: 'APIの利用状況とデプロイ後の健全性を確認できます。', filter: '直近24時間',
+          sources: [
+            { name: 'API health', meta: '18 endpoints' }, { name: 'Deployments', meta: '6 releases' },
+            { name: 'Usage metrics', meta: '42 routes' }, { name: 'Error reports', meta: '3 saved views' }
+          ],
+          kpis: [
+            { label: '稼働中のAPI', note: '+3 this month', value: '18', unit: '本', progress: 76 },
+            { label: '平均応答時間', note: '-12 ms', value: '142', unit: 'ms', progress: 58, color: '#6d858d' },
+            { label: 'リクエスト成功率', note: 'target 99.5%', value: '99.8', unit: '%', progress: 92, color: '#b06a2c' }
+          ],
+          activities: [
+            { name: 'workflow API v2.4', status: '稼働中', progress: 86 },
+            { name: '認証サービスの更新', status: '監視中', progress: 61 },
+            { name: '集計エンドポイント', status: '調査中', progress: 38, color: '#b06a2c' }
+          ],
+          statuses: [{ name: 'API gateway', value: '正常' }, { name: 'デプロイキュー', value: '処理中' }, { name: 'ログ転送', value: '待機中' }]
+        },
+        data: {
+          eyebrow: 'REQUEST PATH', title: 'リクエストからサービス状態更新まで', footer: 'client → gateway → service', ariaLabel: 'クライアントからAPIゲートウェイとサービスを経由して保存先へ至るデータフロー',
+          nodes: [
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'Web client', description: '画面操作とセッション情報', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'none', label: '[API]', title: 'GET /health', description: 'サービスの稼働状態を確認', x: 230, y: 8 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'agent', label: '[API]', title: 'POST /api/workflows', description: 'ワークフロー設定を更新', x: 230, y: 86 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/auth/session', description: '認証セッションを発行', x: 230, y: 164 },
+            { id: 'd5', displayId: 'N05', role: 'api', kind: 'agent', label: '[AGENT]', title: 'GET /api/metrics', description: '運用メトリクスを集計', x: 230, y: 242 },
+            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[CACHE]', title: 'Redis', description: 'セッションと短期キャッシュ', x: 600, y: 72 },
+            { id: 'd7', displayId: 'N07', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: '設定・ユーザー・メトリクス', x: 600, y: 202 }
+          ],
+          wires: [
+            { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' }, { from: 'd1', to: 'd5' },
+            { from: 'd2', to: 'd6' }, { from: 'd3', to: 'd7' }, { from: 'd4', to: 'd6' }, { from: 'd5', to: 'd7' }
+          ]
+        }
+      },
+      seikyu_kappo: {
+        workflow: {
+          note: '請求管理の取込から発行までの接点を編集するビュー',
+          groups: [
+            { label: 'BILLING INTAKE', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'APPROVAL & ISSUE', left: 425, top: 105, width: 425, height: 390 }
+          ],
+          nodes: [
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'agent', title: '請求データを取込', description: '取引先データと明細を読み込む' },
+            { id: 'n2', displayId: 'N02', x: 260, y: 295, kind: 'none', title: '明細を検算', description: '金額と税区分の整合性を確認する' },
+            { id: 'n3', displayId: 'N03', x: 475, y: 150, kind: 'chat', title: '承認待ちに登録', description: '担当者へ確認事項を提示する' },
+            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'agent', title: '請求書を発行', description: '承認済みの請求書を生成する' }
+          ],
+          wires: [
+            { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n2', to: 'n3' }, { id: 'w3', from: 'n3', to: 'n4' }
+          ],
+          nextId: 5
+        },
+        ui: {
+          initials: 'SK', brand: 'seikyu_kappo', subtitle: 'Billing workspace', workspace: 'Invoice control room', updated: 'Updated 2 min ago',
+          eyebrow: 'OVERVIEW / BILLING', title: '請求処理の進捗', description: '請求の取込状況、承認待ち、発行実績を確認できます。', filter: '今月',
+          sources: [
+            { name: '取引先', meta: '86 accounts' }, { name: '請求明細', meta: '1,284 lines' },
+            { name: '承認キュー', meta: '24 pending' }, { name: '発行履歴', meta: '342 invoices' }
+          ],
+          kpis: [
+            { label: '処理中の請求', note: '-14 today', value: '136', unit: '件', progress: 64 },
+            { label: '今月の請求額', note: '+6.2%', value: '12.8', unit: 'M円', progress: 71, color: '#6d858d' },
+            { label: '自動照合率', note: 'target 90%', value: '92', unit: '%', progress: 92, color: '#b06a2c' }
+          ],
+          activities: [
+            { name: '9月分 定期請求', status: '取込済み', progress: 82 },
+            { name: '個別契約の明細確認', status: '承認待ち', progress: 56 },
+            { name: '請求書 PDF 発行', status: '準備中', progress: 34, color: '#b06a2c' }
+          ],
+          statuses: [{ name: '明細同期', value: '正常' }, { name: '承認ワークフロー', value: '処理中' }, { name: '外部送信', value: '待機中' }]
+        },
+        data: {
+          eyebrow: 'REQUEST PATH', title: '請求取込から外部送信まで', footer: 'operator → API → invoice store', ariaLabel: '担当者の操作から請求APIを経由して保存先へ至るデータフロー',
+          nodes: [
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: '管理画面', description: '担当者の取込と承認操作', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'agent', label: '[API]', title: 'POST /api/invoices', description: '請求データを登録する', x: 230, y: 20 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'none', label: '[API]', title: 'POST /api/validate', description: '明細と税区分を検算する', x: 230, y: 128 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/approvals', description: '承認依頼と確認事項を処理する', x: 230, y: 236 },
+            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: '取引先・明細・承認履歴', x: 600, y: 72 },
+            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[FILES]', title: 'Invoice Storage', description: '請求書PDFと送信記録', x: 600, y: 202 }
+          ],
+          wires: [
+            { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' },
+            { from: 'd2', to: 'd5' }, { from: 'd3', to: 'd5' }, { from: 'd3', to: 'd6' }, { from: 'd4', to: 'd6' }
+          ]
+        }
       }
-      startDrag(e, el, c);
-    });
-  }
+    };
 
-  const DRAG_THRESHOLD = 4;
+    let app = 'aikensyu';
+    let view = 'workflow';
+    let editing = false;
+    let selectedNodeId = null;
+    let workflowState = null;
+    let viewSwapTimer = null;
 
-  function startDrag(e, el, c) {
-    // Don't capture/preventDefault yet: a plain click (or the first half of a
-    // dblclick, used to enter text-edit mode) must still reach the browser's
-    // native click/dblclick handling. Only commit to a drag once the pointer
-    // has actually moved past a small threshold.
-    const pid = e.pointerId;
-    const startX = e.clientX, startY = e.clientY;
-    const origX = c.x, origY = c.y;
-    let dragging = false;
-    function move(ev) {
-      const dx = ev.clientX - startX, dy = ev.clientY - startY;
-      if (!dragging) {
-        if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
-        dragging = true;
-        el.setPointerCapture(pid);
-        el.classList.add("dragging");
-      }
-      c.x = Math.max(0, origX + dx);
-      c.y = Math.max(0, origY + dy);
-      el.style.left = c.x + "px";
-      el.style.top = c.y + "px";
-      drawWires();
-    }
-    function up() {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      if (dragging) {
-        el.releasePointerCapture(pid);
-        el.classList.remove("dragging");
-        saveState();
-      }
-    }
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  }
+    const appButtons = document.querySelectorAll('.app');
+    const tabs = document.querySelectorAll('.tab');
+    const views = document.querySelectorAll('.view');
+    const context = document.getElementById('context');
+    const noteTitle = document.getElementById('noteTitle');
+    const noteDescription = document.getElementById('noteDescription');
+    const workflow = document.getElementById('workflow');
+    const workflowCanvas = document.getElementById('workflowCanvas');
+    const workflowGroups = document.getElementById('workflowGroups');
+    const workflowWires = document.getElementById('workflowWires');
+    const workflowNodes = document.getElementById('workflowNodes');
+    const editToggle = document.getElementById('editToggle');
+    const resetWorkflow = document.getElementById('resetWorkflow');
+    const workflowMode = document.getElementById('workflowMode');
+    const addNode = document.getElementById('addNode');
+    const nodeEditor = document.getElementById('nodeEditor');
+    const nodeForm = document.getElementById('nodeForm');
+    const editorNodeName = document.getElementById('editorNodeName');
+    const editorStatus = document.getElementById('editorStatus');
+    const nodeTitle = document.getElementById('nodeTitle');
+    const nodeDescription = document.getElementById('nodeDescription');
+    const nodeType = document.getElementById('nodeType');
+    const uiDescription = document.getElementById('uiDescription');
+    const uiContent = document.getElementById('uiContent');
+    const dataDescription = document.getElementById('dataDescription');
+    const dataContent = document.getElementById('dataContent');
 
-  function handleConnectClick(id, el) {
-    if (!connectFrom) {
-      connectFrom = id;
-      el.classList.add("connect-src");
-      return;
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
     }
-    if (connectFrom !== id) {
-      state.wires.push({ id: "w" + (state.nextId++), from: connectFrom, to: id });
-      saveState();
-    }
-    board.querySelectorAll(".connect-src").forEach((n) => n.classList.remove("connect-src"));
-    connectFrom = null;
-    drawWires();
-  }
 
-  function drawWires() {
-    wireLayer.innerHTML = "";
-    const byId = {};
-    for (const c of state.cards) byId[c.id] = c;
-    for (const w of state.wires) {
-      const from = byId[w.from], to = byId[w.to];
-      if (!from || !to) continue;
-      const p1 = edgePoint(from, to), p2 = edgePoint(to, from);
-      const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      const d = "M " + p1.x + " " + p1.y + " C " + mx + " " + p1.y + " " + mx + " " + p2.y + " " + p2.x + " " + p2.y;
-      path.setAttribute("d", d);
-      path.setAttribute("class", "wire-visible");
-      wireLayer.appendChild(path);
-      const hitPath = path.cloneNode();
-      hitPath.setAttribute("class", "wire-hit");
-      hitPath.style.pointerEvents = "stroke";
-      wireLayer.appendChild(hitPath);
-      const delCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      delCircle.setAttribute("cx", mx); delCircle.setAttribute("cy", my); delCircle.setAttribute("r", 8);
-      delCircle.setAttribute("class", "wire-del");
-      delCircle.addEventListener("click", () => {
-        state.wires = state.wires.filter((x) => x.id !== w.id);
-        saveState(); drawWires();
+    function escapeHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[char]));
+    }
+
+    function hasAppData(appName) {
+      return Object.prototype.hasOwnProperty.call(APP_DATA, appName);
+    }
+
+    function workflowStorageKey(appName) {
+      return WORKFLOW_STORAGE_PREFIX + appName + ':workflow';
+    }
+
+    function defaultWorkflow(appName) {
+      return hasAppData(appName) ? clone(APP_DATA[appName].workflow) : null;
+    }
+
+    function numberOr(value, fallback) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : fallback;
+    }
+
+    function normalizeWorkflowState(saved, appName) {
+      const fallback = defaultWorkflow(appName);
+      if (!saved || !Array.isArray(saved.nodes) || !fallback) return fallback;
+
+      const usedIds = new Set();
+      const nodes = saved.nodes.map((rawNode, index) => {
+        const fallbackNode = fallback.nodes[index] || {};
+        let id = String(rawNode.id || fallbackNode.id || 'n' + (index + 1));
+        while (usedIds.has(id)) id += '-' + index;
+        usedIds.add(id);
+        const kind = KINDS.includes(rawNode.kind) ? rawNode.kind : (KINDS.includes(rawNode.type) ? rawNode.type : (fallbackNode.kind || 'none'));
+        return {
+          id,
+          displayId: String(rawNode.displayId || fallbackNode.displayId || 'N' + String(index + 1).padStart(2, '0')),
+          x: Math.max(0, numberOr(rawNode.x, fallbackNode.x || 0)),
+          y: Math.max(0, numberOr(rawNode.y, fallbackNode.y || 0)),
+          kind,
+          title: String(rawNode.title == null ? (rawNode.name == null ? (fallbackNode.title || '無題') : rawNode.name) : rawNode.title),
+          description: String(rawNode.description == null ? (rawNode.sub == null ? (fallbackNode.description || '') : rawNode.sub) : rawNode.description)
+        };
       });
-      wireLayer.appendChild(delCircle);
-      const delX = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      delX.setAttribute("x", mx); delX.setAttribute("y", my + 3.5); delX.setAttribute("text-anchor", "middle");
-      delX.setAttribute("class", "wire-del-x"); delX.textContent = "×";
-      wireLayer.appendChild(delX);
+
+      const nodeIds = new Set(nodes.map(node => node.id));
+      const savedWires = Array.isArray(saved.wires) ? saved.wires : fallback.wires;
+      const wires = savedWires.map((wire, index) => {
+        const from = Array.isArray(wire) ? wire[0] : wire && wire.from;
+        const to = Array.isArray(wire) ? wire[1] : wire && wire.to;
+        return { id: String((wire && wire.id) || 'w' + (index + 1)), from: String(from || ''), to: String(to || '') };
+      }).filter(wire => nodeIds.has(wire.from) && nodeIds.has(wire.to) && wire.from !== wire.to);
+      const maxNodeNumber = nodes.reduce((max, node) => {
+        const match = node.id.match(/(\d+)$/);
+        return Math.max(max, match ? Number(match[1]) : 0);
+      }, 0);
+
+      return {
+        note: fallback.note,
+        groups: fallback.groups,
+        nodes,
+        wires,
+        nextId: Math.max(1, numberOr(saved.nextId, maxNodeNumber + 1), maxNodeNumber + 1)
+      };
     }
-  }
 
-  document.getElementById("btn-add").addEventListener("click", () => {
-    const id = "c" + (state.nextId++);
-    state.cards.push({ id, x: 80 + (state.cards.length % 5) * 40, y: 80 + (state.cards.length % 5) * 40, kind: "none", title: "新しい工程", sub: "", screen: "画面: " });
-    saveState(); render();
-  });
-
-  document.getElementById("btn-connect").addEventListener("click", (e) => {
-    connectMode = !connectMode;
-    e.target.classList.toggle("active", connectMode);
-    connectBanner.classList.toggle("show", connectMode);
-    if (!connectMode) {
-      connectFrom = null;
-      board.querySelectorAll(".connect-src").forEach((n) => n.classList.remove("connect-src"));
-    }
-  });
-
-  document.getElementById("btn-clear").addEventListener("click", () => {
-    if (!confirm("すべてのカードと矢印を消します。よろしいですか？")) return;
-    state = { cards: [], wires: [], nextId: 1 };
-    saveState(); render();
-  });
-
-  function buildExportHtml() {
-    const minX = Math.min(0, ...state.cards.map((c) => c.x));
-    const minY = Math.min(0, ...state.cards.map((c) => c.y));
-    const maxX = Math.max(200, ...state.cards.map((c) => c.x + 210));
-    const maxY = Math.max(150, ...state.cards.map((c) => c.y + 170));
-    const w = maxX - minX + 20, h = maxY - minY + 20;
-    const byId = {};
-    for (const c of state.cards) byId[c.id] = c;
-    const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    let wires = "";
-    for (const wr of state.wires) {
-      const from = byId[wr.from], to = byId[wr.to];
-      if (!from || !to) continue;
-      const p1 = edgePoint(from, to), p2 = edgePoint(to, from);
-      const mx = (p1.x + p2.x) / 2;
-      wires += '<path class="wire" d="M ' + (p1.x - minX + 10) + ' ' + (p1.y - minY + 10) + ' C ' + (mx - minX + 10) + ' ' + (p1.y - minY + 10) + ' ' + (mx - minX + 10) + ' ' + (p2.y - minY + 10) + ' ' + (p2.x - minX + 10) + ' ' + (p2.y - minY + 10) + '"/>';
-    }
-    let cards = "";
-    for (const c of state.cards) {
-      cards += '<article class="node ' + c.kind + '" style="left:' + (c.x - minX + 10) + 'px;top:' + (c.y - minY + 10) + 'px">' +
-        '<h2>' + esc(c.title) + '</h2><div class="sub">' + esc(c.sub) + '</div>' +
-        '<span class="kind">' + esc(KIND_LABEL[c.kind]) + '</span>' +
-        '<div class="screen">' + esc(c.screen) + '</div></article>';
-    }
-    return '<!doctype html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>ワークフロー図</title>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;600&display=swap">\n<style>\n:root{color-scheme:light;--canvas:#f4f2ee;--dot:#ddd8ce;--card:#fff;--border:#e6e2d8;--ink:#21201c;--muted:#69655c;--line:#918b80;--shadow:0 1px 2px #1e1a0f0a,0 8px 20px -8px #1e1a0f24;--agent:#7141d9;--agent-soft:#f1ecff;--chat:#2166df;--chat-soft:#e9f0ff;--none:#716b5e;--none-soft:#ece9e0;--future:#9340bd;--future-soft:#f7ecff}\n@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--canvas:#17161a;--dot:#2a2932;--card:#211f26;--border:#35333c;--ink:#ece9e4;--muted:#b5afa3;--line:#81798e;--agent:#b79bff;--agent-soft:#2c2440;--chat:#7fabff;--chat-soft:#1c2b45;--none:#b8b1a3;--none-soft:#2b2924;--future:#e0a3ff;--future-soft:#3a2545}}\n:root[data-theme="dark"]{color-scheme:dark;--canvas:#17161a;--dot:#2a2932;--card:#211f26;--border:#35333c;--ink:#ece9e4;--muted:#b5afa3;--line:#81798e;--agent:#b79bff;--agent-soft:#2c2440;--chat:#7fabff;--chat-soft:#1c2b45;--none:#b8b1a3;--none-soft:#2b2924;--future:#e0a3ff;--future-soft:#3a2545}\n*{box-sizing:border-box}\nbody{margin:0;padding:32px 16px;color:var(--ink);background:var(--canvas);background-image:radial-gradient(circle,var(--dot) 1.2px,transparent 1.2px);background-size:22px 22px;font-family:Inter,"Noto Sans",system-ui,sans-serif}\n.scroll{overflow:auto;max-width:1100px;margin:auto;border-radius:16px}\n.board{position:relative;width:' + Math.round(w) + 'px;height:' + Math.round(h) + 'px}\n.wires{position:absolute;inset:0;width:' + Math.round(w) + 'px;height:' + Math.round(h) + 'px;pointer-events:none}\n.wire{fill:none;stroke:var(--line);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#a)}\n.node{position:absolute;width:190px;padding:14px 15px 12px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}\n.node::before{content:"";position:absolute;top:0;left:15px;right:15px;height:4px;border-radius:0 0 4px 4px;background:var(--accent)}\n.agent{--accent:var(--agent);--soft:var(--agent-soft)}\n.chat{--accent:var(--chat);--soft:var(--chat-soft)}\n.none{--accent:var(--none);--soft:var(--none-soft)}\n.future{--accent:var(--future);--soft:var(--future-soft);border-style:dashed;border-color:var(--accent)}\n.node h2{margin:0;font:700 14px/1.4 "Space Grotesk",system-ui,sans-serif}\n.sub{margin-top:4px;font-size:11px;color:var(--muted);line-height:1.5}\n.kind{display:inline-block;margin-top:8px;padding:2px 8px;font-size:10px;font-weight:700;border-radius:999px;color:var(--accent);background:var(--soft)}\n.screen{display:block;margin-top:8px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}\n</style>\n</head>\n<body>\n<div class="scroll"><figure class="board">\n<svg class="wires"><defs><marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--line)"/></marker></defs>' + wires + '</svg>\n' + cards + '\n</figure></div>\n</body>\n</html>\n';
-  }
-
-  document.getElementById("btn-export").addEventListener("click", () => {
-    document.getElementById("export-text").value = buildExportHtml();
-    document.getElementById("export-panel").classList.add("show");
-  });
-  document.getElementById("btn-export-close").addEventListener("click", () => {
-    document.getElementById("export-panel").classList.remove("show");
-  });
-  document.getElementById("btn-export-copy").addEventListener("click", async () => {
-    const ta = document.getElementById("export-text");
-    ta.select();
-    try { await navigator.clipboard.writeText(ta.value); hint.textContent = "コピーしました"; }
-    catch (e) { document.execCommand("copy"); hint.textContent = "コピーしました"; }
-    setTimeout(() => { hint.textContent = "カードをドラッグで移動・文字をダブルクリックで編集・カテゴリをクリックで色を切替"; }, 2000);
-  });
-
-  document.getElementById("btn-download").addEventListener("click", async () => {
-    const html = buildExportHtml();
-    const downloads = window.claude ? await window.claude.use("downloads").catch(() => null) : null;
-    if (downloads) {
+    function loadWorkflowState(appName) {
+      const fallback = defaultWorkflow(appName);
+      if (!fallback) return null;
       try {
-        await downloads.save({ filename: "workflow-diagram.html", data: html });
-        return;
-      } catch (e) {}
+        const raw = window.localStorage.getItem(workflowStorageKey(appName));
+        return raw ? normalizeWorkflowState(JSON.parse(raw), appName) : fallback;
+      } catch (error) {
+        return fallback;
+      }
     }
-    document.getElementById("export-text").value = html;
-    document.getElementById("export-panel").classList.add("show");
-    hint.textContent = "自動ダウンロードが使えないため、上のHTMLをコピーして保存してください";
-  });
 
-  render();
-})();
-</script>
+    function saveWorkflowState() {
+      if (!workflowState || !hasAppData(app)) return;
+      const payload = {
+        version: 1,
+        nodes: workflowState.nodes.map(node => ({
+          id: node.id,
+          displayId: node.displayId,
+          x: node.x,
+          y: node.y,
+          kind: node.kind,
+          title: node.title,
+          description: node.description
+        })),
+        wires: workflowState.wires,
+        nextId: workflowState.nextId
+      };
+      try { window.localStorage.setItem(workflowStorageKey(app), JSON.stringify(payload)); } catch (error) {}
+    }
+
+    function emptyStateMarkup(title) {
+      return '<div class="empty-state"><span class="empty-kicker">NO CONFIGURATION</span><h3>' + escapeHtml(title) + '</h3><p>このアプリの構成はまだ登録されていません</p></div>';
+    }
+
+    function updateContext() {
+      context.textContent = app;
+      noteTitle.textContent = app + ' のワークフロー';
+      noteDescription.textContent = workflowState ? workflowState.note : 'このアプリの構成はまだ登録されていません';
+    }
+
+    function workflowNodeElement(id) {
+      return [...workflowNodes.querySelectorAll('.workflow-node')].find(node => node.dataset.id === id) || null;
+    }
+
+    function hideNodeEditor() {
+      nodeEditor.setAttribute('aria-hidden', 'true');
+      nodeEditor.classList.remove('is-switching');
+      editorNodeName.textContent = '';
+      editorStatus.textContent = '未選択';
+    }
+
+    function selectNode(node) {
+      if (!editing || !workflowState || !node) return;
+      const nodeData = workflowState.nodes.find(item => item.id === node.dataset.id);
+      if (!nodeData) return;
+      selectedNodeId = nodeData.id;
+      workflowNodes.querySelectorAll('.workflow-node').forEach(item => item.classList.toggle('selected', item === node));
+      editorNodeName.textContent = nodeData.title;
+      nodeTitle.value = nodeData.title;
+      nodeDescription.value = nodeData.description;
+      nodeType.value = nodeData.kind;
+      editorStatus.textContent = '選択中';
+      nodeEditor.setAttribute('aria-hidden', 'false');
+      nodeEditor.classList.remove('is-switching');
+      requestAnimationFrame(() => nodeEditor.classList.add('is-switching'));
+    }
+
+    function createWorkflowNode(nodeData) {
+      const node = document.createElement('article');
+      node.className = 'node ' + nodeData.kind + ' workflow-node';
+      node.dataset.id = nodeData.id;
+      node.dataset.node = nodeData.title;
+      node.style.left = nodeData.x + 'px';
+      node.style.top = nodeData.y + 'px';
+      node.innerHTML = '<div class="node-actions"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><small class="node-id" aria-hidden="true"></small><h3></h3><p></p><span></span>';
+      node.querySelector('.node-actions').setAttribute('aria-label', nodeData.title + 'の操作');
+      node.querySelector('.node-id').textContent = nodeData.displayId;
+      node.querySelector('h3').textContent = nodeData.title;
+      node.querySelector('p').textContent = nodeData.description;
+      node.querySelector('span').textContent = TYPE_SHORT_LABELS[nodeData.kind];
+      if (selectedNodeId === nodeData.id) node.classList.add('selected');
+      bindWorkflowNode(node, nodeData);
+      return node;
+    }
+
+    function bindWorkflowNode(node, nodeData) {
+      node.addEventListener('click', event => {
+        if (!editing || event.target.closest('.node-action')) return;
+        selectNode(node);
+      });
+      node.querySelector('.node-action.edit').addEventListener('click', event => {
+        event.stopPropagation();
+        if (!editing) return;
+        selectNode(node);
+        nodeTitle.focus();
+      });
+      node.querySelector('.node-action.delete').addEventListener('click', event => {
+        event.stopPropagation();
+        if (!editing || !workflowState) return;
+        const wasSelected = selectedNodeId === nodeData.id;
+        workflowState.nodes = workflowState.nodes.filter(item => item.id !== nodeData.id);
+        workflowState.wires = workflowState.wires.filter(wire => wire.from !== nodeData.id && wire.to !== nodeData.id);
+        if (wasSelected) selectedNodeId = workflowState.nodes[0] ? workflowState.nodes[0].id : null;
+        saveWorkflowState();
+        renderWorkflow();
+      });
+      node.addEventListener('pointerdown', event => {
+        if (!editing || event.button !== 0 || event.target.closest('.node-action')) return;
+        startNodeDrag(event, node, nodeData);
+      });
+    }
+
+    const DRAG_THRESHOLD = 4;
+
+    function canvasScale() {
+      const unscaledWidth = workflowCanvas.offsetWidth || 860;
+      return workflowCanvas.getBoundingClientRect().width / unscaledWidth || 1;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function startNodeDrag(event, node, nodeData) {
+      if (!editing || !workflowState) return;
+      const pointerId = event.pointerId;
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const originalRect = node.getBoundingClientRect();
+      const scale = canvasScale();
+      const grabX = (event.clientX - originalRect.left) / scale;
+      const grabY = (event.clientY - originalRect.top) / scale;
+      let dragging = false;
+
+      function move(moveEvent) {
+        if (moveEvent.pointerId !== pointerId) return;
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        if (!dragging) {
+          if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+          dragging = true;
+          if (node.setPointerCapture) node.setPointerCapture(pointerId);
+          node.classList.add('dragging');
+        }
+        moveEvent.preventDefault();
+        const rect = workflowCanvas.getBoundingClientRect();
+        const currentScale = canvasScale();
+        const maxX = Math.max(0, workflowCanvas.clientWidth - node.offsetWidth);
+        const maxY = Math.max(0, workflowCanvas.clientHeight - node.offsetHeight);
+        nodeData.x = Math.round(clamp((moveEvent.clientX - rect.left) / currentScale - grabX, 0, maxX));
+        nodeData.y = Math.round(clamp((moveEvent.clientY - rect.top) / currentScale - grabY, 0, maxY));
+        node.style.left = nodeData.x + 'px';
+        node.style.top = nodeData.y + 'px';
+        drawWorkflowWires();
+      }
+
+      function finish(finishEvent) {
+        if (finishEvent && finishEvent.pointerId !== pointerId) return;
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', finish);
+        window.removeEventListener('pointercancel', finish);
+        if (!dragging) return;
+        if (node.releasePointerCapture) {
+          try { node.releasePointerCapture(pointerId); } catch (error) {}
+        }
+        node.classList.remove('dragging');
+        saveWorkflowState();
+      }
+
+      window.addEventListener('pointermove', move, { passive: false });
+      window.addEventListener('pointerup', finish);
+      window.addEventListener('pointercancel', finish);
+    }
+
+    function edgePoint(from, to, width, height) {
+      const fx = from.x + width / 2;
+      const fy = from.y + height / 2;
+      const tx = to.x + width / 2;
+      const ty = to.y + height / 2;
+      const dx = tx - fx;
+      const dy = ty - fy;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        const sx = fx + (dx > 0 ? width / 2 : -width / 2);
+        return { x: sx, y: fy + dy * ((sx - fx) / (dx || 1)) };
+      }
+      const sy = fy + (dy > 0 ? height / 2 : -height / 2);
+      return { x: fx + dx * ((sy - fy) / (dy || 1)), y: sy };
+    }
+
+    function wirePath(from, to, width, height) {
+      const start = edgePoint(from, to, width, height);
+      const end = edgePoint(to, from, width, height);
+      const midX = (start.x + end.x) / 2;
+      return 'M ' + start.x + ' ' + start.y + ' C ' + midX + ' ' + start.y + ' ' + midX + ' ' + end.y + ' ' + end.x + ' ' + end.y;
+    }
+
+    function drawWorkflowWires() {
+      workflowWires.innerHTML = '<defs><marker id="workflowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a"></path></marker></defs>';
+      if (!workflowState) return;
+      const byId = Object.fromEntries(workflowState.nodes.map(node => [node.id, node]));
+      workflowState.wires.forEach(wire => {
+        const from = byId[wire.from];
+        const to = byId[wire.to];
+        if (!from || !to) return;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'wire');
+        path.setAttribute('d', wirePath(from, to, 170, 112));
+        path.setAttribute('marker-end', 'url(#workflowArrow)');
+        workflowWires.appendChild(path);
+      });
+    }
+
+    function renderWorkflow() {
+      updateContext();
+      workflowGroups.replaceChildren();
+      workflowNodes.replaceChildren();
+      workflowWires.innerHTML = '';
+      workflowMode.hidden = !workflowState;
+      addNode.hidden = !workflowState;
+      workflow.classList.toggle('editing', editing && Boolean(workflowState));
+
+      if (!workflowState) {
+        workflowNodes.innerHTML = emptyStateMarkup('ワークフロー');
+        hideNodeEditor();
+        return;
+      }
+
+      workflowState.groups.forEach(groupData => {
+        const group = document.createElement('div');
+        group.className = 'group';
+        group.style.left = groupData.left + 'px';
+        group.style.top = groupData.top + 'px';
+        group.style.width = groupData.width + 'px';
+        group.style.height = groupData.height + 'px';
+        const label = document.createElement('label');
+        label.textContent = groupData.label;
+        group.appendChild(label);
+        workflowGroups.appendChild(group);
+      });
+      drawWorkflowWires();
+      workflowState.nodes.forEach(nodeData => workflowNodes.appendChild(createWorkflowNode(nodeData)));
+
+      if (!workflowState.nodes.some(node => node.id === selectedNodeId)) selectedNodeId = null;
+      if (workflowState.nodes.length === 0) {
+        workflowNodes.innerHTML = '<div class="empty-state"><span class="empty-kicker">EMPTY WORKFLOW</span><h3>ノードがありません</h3><p>編集モードでノードを追加できます</p></div>';
+        hideNodeEditor();
+      } else if (editing) {
+        const node = workflowNodeElement(selectedNodeId || workflowState.nodes[0].id);
+        selectNode(node);
+      } else {
+        hideNodeEditor();
+      }
+    }
+
+    function buildUiMarkup(data) {
+      const sources = data.sources.map((source, index) => '<a class="ui-source' + (index === 0 ? ' active' : '') + '" href="#ui"><span class="ui-source-mark"></span><span><b>' + escapeHtml(source.name) + '</b><small>' + escapeHtml(source.meta) + '</small></span></a>').join('');
+      const kpis = data.kpis.map(kpi => {
+        const progress = clamp(numberOr(kpi.progress, 0), 0, 100);
+        const color = kpi.color ? ' style="background:' + escapeHtml(kpi.color) + ';"' : '';
+        return '<div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">' + escapeHtml(kpi.label) + '</span><span class="ui-kpi-note">' + escapeHtml(kpi.note) + '</span></div><strong>' + escapeHtml(kpi.value) + '<small>' + escapeHtml(kpi.unit) + '</small></strong><div class="ui-kpi-line"><i style="width:' + progress + '%;' + (color ? 'background:' + escapeHtml(kpi.color) + ';' : '') + '"></i></div></div>';
+      }).join('');
+      const activities = data.activities.map(activity => {
+        const progress = clamp(numberOr(activity.progress, 0), 0, 100);
+        const color = activity.color ? ' background:' + escapeHtml(activity.color) + ';' : '';
+        return '<div class="ui-activity-row"><div><b>' + escapeHtml(activity.name) + '</b><div class="ui-activity-bar"><i style="width:' + progress + '%;' + color + '"></i></div></div><small>' + escapeHtml(activity.status) + '</small></div>';
+      }).join('');
+      const statuses = data.statuses.map(status => '<div class="ui-status"><span>' + escapeHtml(status.name) + '</span><b>' + escapeHtml(status.value) + '</b></div>').join('');
+      return '<div class="ui-preview" aria-label="' + escapeHtml(data.brand) + ' のダッシュボードプレビュー"><aside class="ui-sidebar"><div class="ui-brand"><span class="ui-logo">' + escapeHtml(data.initials) + '</span><div><strong>' + escapeHtml(data.brand) + '</strong><small>' + escapeHtml(data.subtitle) + '</small></div></div><div class="ui-section-label">SOURCES</div><nav class="ui-source-nav" aria-label="ソース一覧">' + sources + '</nav><div class="ui-sidebar-footer"><span>WORKSPACE</span><b>' + escapeHtml(data.workspace) + '</b><small>' + escapeHtml(data.updated) + '</small></div></aside><div class="ui-main"><div class="ui-header"><div><span class="ui-eyebrow">' + escapeHtml(data.eyebrow) + '</span><h3>' + escapeHtml(data.title) + '</h3><p>' + escapeHtml(data.description) + '</p></div><button class="ui-filter">' + escapeHtml(data.filter) + '<span class="ui-filter-caret" aria-hidden="true"></span></button></div><div class="ui-kpis">' + kpis + '</div><div class="ui-panels"><section class="ui-panel"><h4>最近のアクティビティ</h4><div class="ui-activity">' + activities + '</div></section><section class="ui-panel"><h4>運用ステータス</h4><div class="ui-status-list">' + statuses + '</div></section></div></div></div>';
+    }
+
+    function renderUiView() {
+      const data = hasAppData(app) ? APP_DATA[app].ui : null;
+      uiDescription.textContent = data ? data.description : 'このアプリの構成はまだ登録されていません';
+      uiContent.innerHTML = data ? buildUiMarkup(data) : emptyStateMarkup('アプリのUI');
+    }
+
+    function dataWirePathMarkup(data) {
+      const byId = Object.fromEntries(data.nodes.map(node => [node.id, node]));
+      return data.wires.map(wire => {
+        const from = byId[wire.from];
+        const to = byId[wire.to];
+        return from && to ? '<path class="wire data-wire" d="' + wirePath(from, to, 164, 102) + '"></path>' : '';
+      }).join('');
+    }
+
+    function buildDataMarkup(data) {
+      const nodes = data.nodes.map(node => '<article class="node ' + escapeHtml(node.kind) + ' data-node" style="left:' + numberOr(node.x, 0) + 'px;top:' + numberOr(node.y, 0) + 'px"><small class="node-id" aria-hidden="true">' + escapeHtml(node.displayId) + '</small><h3>' + escapeHtml(node.title) + '</h3><p>' + escapeHtml(node.description) + '</p><span>' + escapeHtml(node.label) + '</span></article>').join('');
+      return '<div class="flow-card"><div class="flow-header"><div><span class="flow-eyebrow">' + escapeHtml(data.eyebrow) + '</span><h3>' + escapeHtml(data.title) + '</h3></div><div class="flow-legend"><span><i class="legend-dot"></i>クライアント</span><span><i class="legend-dot api"></i>API</span><span><i class="legend-dot session"></i>AI連携</span></div></div><div class="flow-board" aria-label="' + escapeHtml(data.ariaLabel) + '"><span class="flow-column-label client">CLIENT</span><span class="flow-column-label endpoint">API ENDPOINTS</span><span class="flow-column-label storage">PERSISTENCE</span><svg width="820" height="360" viewBox="0 0 820 360" aria-hidden="true"><defs><marker id="dataArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#87919a"></path></marker></defs>' + dataWirePathMarkup(data) + '</svg>' + nodes + '</div><div class="flow-footer"><span>主要な呼び出し:</span><code>' + escapeHtml(data.footer) + '</code></div></div>';
+    }
+
+    function renderDataView() {
+      const data = hasAppData(app) ? APP_DATA[app].data : null;
+      dataDescription.textContent = data ? '選択アプリ内外のデータの流れと責任境界を、リクエスト単位で確認するビューです。' : 'このアプリの構成はまだ登録されていません';
+      dataContent.innerHTML = data ? buildDataMarkup(data) : emptyStateMarkup('データフロー');
+    }
+
+    function updateEditControls() {
+      const canEdit = Boolean(workflowState);
+      if (!canEdit) {
+        editing = false;
+        selectedNodeId = null;
+      }
+      editToggle.disabled = !canEdit;
+      resetWorkflow.disabled = !canEdit;
+      editToggle.textContent = editing ? '閲覧に戻る' : '編集する';
+      editToggle.setAttribute('aria-pressed', String(editing));
+      workflowMode.textContent = editing ? '編集モード' : '閲覧モード';
+    }
+
+    function activateApp(nextApp) {
+      if (nextApp === app) return;
+      app = nextApp;
+      appButtons.forEach(button => button.classList.toggle('active', button.dataset.app === app));
+      workflowState = loadWorkflowState(app);
+      selectedNodeId = null;
+      updateEditControls();
+      renderWorkflow();
+      renderUiView();
+      renderDataView();
+    }
+
+    appButtons.forEach(button => button.addEventListener('click', () => activateApp(button.dataset.app)));
+
+    document.getElementById('appSearch').addEventListener('input', event => {
+      const query = event.target.value.trim().toLowerCase();
+      appButtons.forEach(button => {
+        button.hidden = query !== '' && !button.dataset.app.toLowerCase().includes(query);
+      });
+    });
+
+    function switchView(nextView) {
+      if (nextView === view) return;
+      const nextViewEl = document.getElementById(nextView);
+      const currentViewEl = [...views].find(element => !element.classList.contains('hidden'));
+      view = nextView;
+      tabs.forEach(button => button.classList.toggle('active', button.dataset.view === nextView));
+      if (viewSwapTimer) window.clearTimeout(viewSwapTimer);
+      views.forEach(element => {
+        if (element !== currentViewEl && element !== nextViewEl) {
+          element.classList.add('hidden');
+          element.classList.remove('is-entering', 'is-leaving');
+        }
+      });
+      if (currentViewEl && currentViewEl !== nextViewEl) {
+        currentViewEl.classList.remove('is-entering');
+        currentViewEl.classList.add('is-leaving');
+        viewSwapTimer = window.setTimeout(() => {
+          currentViewEl.classList.add('hidden');
+          currentViewEl.classList.remove('is-leaving');
+        }, 180);
+      }
+      nextViewEl.classList.remove('hidden', 'is-leaving');
+      requestAnimationFrame(() => nextViewEl.classList.add('is-entering'));
+      window.setTimeout(() => nextViewEl.classList.remove('is-entering'), 200);
+    }
+
+    tabs.forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
+
+    editToggle.addEventListener('click', () => {
+      if (!workflowState) return;
+      editing = !editing;
+      updateEditControls();
+      renderWorkflow();
+    });
+
+    resetWorkflow.addEventListener('click', () => {
+      if (!workflowState) return;
+      try { window.localStorage.removeItem(workflowStorageKey(app)); } catch (error) {}
+      workflowState = defaultWorkflow(app);
+      selectedNodeId = null;
+      renderWorkflow();
+    });
+
+    addNode.addEventListener('click', () => {
+      if (!editing || !workflowState) return;
+      const slot = workflowState.nodes.length;
+      let id = 'n' + workflowState.nextId++;
+      const existingIds = new Set(workflowState.nodes.map(node => node.id));
+      while (existingIds.has(id)) id = 'n' + workflowState.nextId++;
+      const x = 55 + (slot % 4) * 190;
+      const y = Math.min(500, 505 + Math.floor(slot / 4) * 100);
+      const nodeData = {
+        id,
+        displayId: 'N' + String(workflowState.nextId - 1).padStart(2, '0'),
+        x,
+        y,
+        kind: 'none',
+        title: '新しいノード',
+        description: '追加したステップの説明'
+      };
+      workflowState.nodes.push(nodeData);
+      selectedNodeId = nodeData.id;
+      saveWorkflowState();
+      renderWorkflow();
+    });
+
+    nodeForm.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!editing || !workflowState || !selectedNodeId) return;
+      const nodeData = workflowState.nodes.find(node => node.id === selectedNodeId);
+      if (!nodeData) return;
+      nodeData.title = nodeTitle.value.trim() || '名称未設定';
+      nodeData.description = nodeDescription.value.trim() || '説明未設定';
+      nodeData.kind = KINDS.includes(nodeType.value) ? nodeType.value : 'none';
+      saveWorkflowState();
+      renderWorkflow();
+      const renderedNode = workflowNodeElement(nodeData.id);
+      if (renderedNode) {
+        selectNode(renderedNode);
+        editorStatus.textContent = '保存済み';
+      }
+    });
+
+    document.getElementById('cancelNode').addEventListener('click', () => {
+      const node = workflowNodeElement(selectedNodeId);
+      if (node) selectNode(node);
+    });
+
+    workflowState = loadWorkflowState(app);
+    updateEditControls();
+    renderWorkflow();
+    renderUiView();
+    renderDataView();
+  </script>
+</body>
+</html>

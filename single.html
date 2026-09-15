@@ -1,0 +1,468 @@
+<title>ワークフロー図エディタ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --canvas: #f4f2ee; --dot: #ddd8ce; --card: #ffffff; --card-border: #e6e2d8;
+    --ink: #21201c; --muted: #79756a; --line: #918b80;
+    --shadow: 0 1px 2px rgba(30,26,15,0.05), 0 8px 20px -8px rgba(30,26,15,0.18);
+    --toolbar: #ffffff;
+    --agent: #7c4ded; --agent-soft: #f1ecff;
+    --chat: #2166e8; --chat-soft: #e9f0ff;
+    --none: #8a8577; --none-soft: #ece9e0;
+    --future: #b34ded; --future-soft: #f7ecff;
+    --danger: #b23b3b; --danger-soft: #fbe9e7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #17161a; --dot: #2a2932; --card: #211f26; --card-border: #35333c;
+      --ink: #ece9e4; --muted: #a29d90; --line: #6c6779; --toolbar: #1b1a1f;
+      --agent: #b79bff; --agent-soft: #2c2440;
+      --chat: #7fabff; --chat-soft: #1c2b45;
+      --none: #a8a396; --none-soft: #2b2924;
+      --future: #e0a3ff; --future-soft: #3a2545;
+      --danger: #e2867a; --danger-soft: #2e1c1a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #17161a; --dot: #2a2932; --card: #211f26; --card-border: #35333c;
+    --ink: #ece9e4; --muted: #a29d90; --line: #6c6779; --toolbar: #1b1a1f;
+    --agent: #b79bff; --agent-soft: #2c2440;
+    --chat: #7fabff; --chat-soft: #1c2b45;
+    --none: #a8a396; --none-soft: #2b2924;
+    --future: #e0a3ff; --future-soft: #3a2545;
+    --danger: #e2867a; --danger-soft: #2e1c1a;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--canvas); color: var(--ink);
+    font-family: 'Inter', -apple-system, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+
+  .toolbar {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--toolbar); border-bottom: 1px solid var(--card-border);
+    z-index: 20;
+  }
+  .toolbar h1 { font: 700 14px/1 'Space Grotesk', sans-serif; margin: 0 14px 0 0; white-space: nowrap; }
+  .toolbar button {
+    font: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 8px;
+    border: 1px solid var(--card-border); background: var(--card); color: var(--ink); cursor: pointer;
+  }
+  .toolbar button:hover { border-color: var(--line); }
+  .toolbar button.primary { background: var(--agent); border-color: var(--agent); color: #fff; }
+  .toolbar button.active { background: var(--agent-soft); border-color: var(--agent); color: var(--agent); }
+  .toolbar .sep { width: 1px; height: 22px; background: var(--card-border); margin: 0 2px; }
+  .toolbar .hint { font-size: 11.5px; color: var(--muted); margin-left: auto; }
+
+  .canvas-scroll {
+    flex: 1 1 auto; overflow: auto; position: relative;
+    background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+  }
+  .board { position: relative; width: 2400px; height: 1400px; }
+  svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .wire-hit { stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: pointer; }
+  .wire-visible { stroke: var(--line); stroke-width: 2; fill: none; marker-end: url(#wf-arrow); }
+  .wire-del {
+    fill: var(--danger-soft); stroke: var(--danger); stroke-width: 1.5; cursor: pointer; pointer-events: all;
+  }
+  .wire-del-x { fill: var(--danger); font: 700 11px Inter, sans-serif; pointer-events: none; }
+
+  .card {
+    position: absolute; width: 190px; background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 16px; box-shadow: var(--shadow); padding: 14px 15px 12px; cursor: grab; user-select: none;
+    touch-action: none;
+  }
+  .card.dragging { cursor: grabbing; box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 16px 32px -8px rgba(0,0,0,0.28); z-index: 10; }
+  .card.connect-src { outline: 2px solid var(--agent); outline-offset: 3px; }
+  .accent-bar { position: absolute; top: 0; left: 16px; right: 16px; height: 4px; border-radius: 0 0 4px 4px; }
+  .card.agent .accent-bar { background: var(--agent); } .card.agent .kind { background: var(--agent-soft); color: var(--agent); }
+  .card.chat .accent-bar { background: var(--chat); } .card.chat .kind { background: var(--chat-soft); color: var(--chat); }
+  .card.none .accent-bar { background: var(--none); } .card.none .kind { background: var(--none-soft); color: var(--none); }
+  .card.future .accent-bar { background: var(--future); } .card.future .kind { background: var(--future-soft); color: var(--future); }
+  .card.future { border-style: dashed; }
+
+  .card .del {
+    position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%;
+    border: none; background: transparent; color: var(--muted); font-size: 13px; line-height: 1;
+    cursor: pointer; display: none; align-items: center; justify-content: center;
+  }
+  .card:hover .del { display: flex; }
+  .card .del:hover { background: var(--danger-soft); color: var(--danger); }
+
+  .card .title {
+    font: 700 14px/1.4 'Space Grotesk', sans-serif; margin-top: 6px; outline: none; cursor: text;
+    border-radius: 4px; padding: 1px 3px; margin-left: -3px;
+  }
+  .card .sub {
+    font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; outline: none; cursor: text;
+    border-radius: 4px; padding: 1px 3px; margin-left: -3px; min-height: 14px;
+  }
+  .card .title:focus, .card .sub:focus, .card .screen:focus { background: var(--none-soft); }
+  .card .kind {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; cursor: pointer; border: none;
+  }
+  .card .screen {
+    display: block; margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--card-border);
+    font-size: 10px; color: var(--muted); outline: none; cursor: text; min-height: 12px;
+  }
+
+  .connect-banner {
+    position: fixed; top: 54px; left: 50%; transform: translateX(-50%);
+    background: var(--agent); color: #fff; font-size: 12px; font-weight: 600;
+    padding: 6px 14px; border-radius: 999px; z-index: 30; box-shadow: var(--shadow);
+    display: none;
+  }
+  .connect-banner.show { display: block; }
+
+  .export-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40;
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .export-panel.show { display: flex; }
+  .export-box {
+    background: var(--card); border-radius: 14px; padding: 18px; width: min(760px, 100%);
+    max-height: 80vh; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow);
+  }
+  .export-box h2 { font: 700 15px 'Space Grotesk', sans-serif; margin: 0; }
+  .export-box textarea {
+    flex: 1; min-height: 300px; font: 11px/1.5 ui-monospace, monospace; padding: 10px;
+    border: 1px solid var(--card-border); border-radius: 8px; background: var(--canvas); color: var(--ink);
+    resize: vertical;
+  }
+  .export-box .row { display: flex; gap: 8px; justify-content: flex-end; }
+</style>
+
+<div class="toolbar">
+  <h1>ワークフロー図エディタ</h1>
+  <button id="btn-add" class="primary">+ カード</button>
+  <div class="sep"></div>
+  <button id="btn-connect">矢印でつなぐ</button>
+  <div class="sep"></div>
+  <button id="btn-export">HTMLを書き出す</button>
+  <button id="btn-download">ダウンロード</button>
+  <div class="sep"></div>
+  <button id="btn-clear">全部消す</button>
+  <span class="hint" id="hint">カードをドラッグで移動・文字をダブルクリックで編集・カテゴリをクリックで色を切替</span>
+</div>
+
+<div class="canvas-scroll" id="scroll">
+  <div class="board" id="board">
+    <svg class="wires" id="wires">
+      <defs>
+        <marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--line)"></path>
+        </marker>
+      </defs>
+      <g id="wire-layer"></g>
+    </svg>
+  </div>
+</div>
+
+<div class="connect-banner" id="connect-banner">1枚目のカードをクリック → 2枚目のカードをクリックすると矢印を引きます</div>
+
+<div class="export-panel" id="export-panel">
+  <div class="export-box">
+    <h2>書き出したHTML</h2>
+    <textarea id="export-text" readonly></textarea>
+    <div class="row">
+      <button id="btn-export-copy">コピー</button>
+      <button id="btn-export-close" class="primary">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const KINDS = ["agent", "chat", "none", "future"];
+  const KIND_LABEL = { agent: "AIエージェント", chat: "AIチャット", none: "AI不使用", future: "構想・未実装" };
+  const STORAGE_KEY = "workflow-canvas-editor-state-v1";
+
+  let state = loadState() || {
+    cards: [
+      { id: "c1", x: 60, y: 60, kind: "agent", title: "列判定", sub: "資料カタログの列の意味を読む", screen: "画面: 資料カタログ" },
+      { id: "c2", x: 340, y: 60, kind: "none", title: "A 集計", sub: "決定論の計算のみ", screen: "画面: KPI欄" }
+    ],
+    wires: [{ id: "w1", from: "c1", to: "c2" }],
+    nextId: 3
+  };
+
+  const board = document.getElementById("board");
+  const wireLayer = document.getElementById("wire-layer");
+  const scroll = document.getElementById("scroll");
+  const hint = document.getElementById("hint");
+  const connectBanner = document.getElementById("connect-banner");
+
+  let connectMode = false;
+  let connectFrom = null;
+  let dragCtx = null;
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function cardEl(id) { return board.querySelector('.card[data-id="' + id + '"]'); }
+  function cardCenter(c) { return { x: c.x + 95, y: c.y + 55 }; }
+
+  function edgePoint(from, to) {
+    const w = 190, h = 110;
+    const fx = from.x + w / 2, fy = from.y + h / 2;
+    const tx = to.x + w / 2, ty = to.y + h / 2;
+    const dx = tx - fx, dy = ty - fy;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      const sx = fx + (dx > 0 ? w / 2 : -w / 2);
+      return { x: sx, y: fy + dy * ((sx - fx) / (dx || 1)) };
+    }
+    const sy = fy + (dy > 0 ? h / 2 : -h / 2);
+    return { x: fx + dx * ((sy - fy) / (dy || 1)), y: sy };
+  }
+
+  function render() {
+    board.querySelectorAll(".card").forEach((el) => el.remove());
+    for (const c of state.cards) {
+      const el = document.createElement("div");
+      el.className = "card " + c.kind;
+      el.dataset.id = c.id;
+      el.style.left = c.x + "px";
+      el.style.top = c.y + "px";
+      el.innerHTML =
+        '<div class="accent-bar"></div>' +
+        '<button class="del" title="削除">&times;</button>' +
+        '<div class="title" spellcheck="false"></div>' +
+        '<div class="sub" spellcheck="false"></div>' +
+        '<span class="kind"></span>' +
+        '<div class="screen" spellcheck="false"></div>';
+      el.querySelector(".title").textContent = c.title;
+      el.querySelector(".sub").textContent = c.sub;
+      el.querySelector(".kind").textContent = KIND_LABEL[c.kind];
+      el.querySelector(".screen").textContent = c.screen;
+      board.appendChild(el);
+      wireUpCard(el, c);
+    }
+    drawWires();
+  }
+
+  function wireUpCard(el, c) {
+    const editable = ["title", "sub", "screen"];
+    for (const field of editable) {
+      const node = el.querySelector("." + field);
+      node.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        node.contentEditable = "true";
+        node.focus();
+        document.execCommand("selectAll", false, null);
+      });
+      node.addEventListener("blur", (e) => {
+        node.contentEditable = "false";
+        const value = e.target.textContent.trim();
+        c[field] = field === "title" ? (value || "無題") : value;
+        saveState();
+      });
+      node.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && field !== "sub") { e.preventDefault(); node.blur(); }
+        if (e.key === "Escape") node.blur();
+      });
+    }
+    el.querySelector(".kind").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const idx = KINDS.indexOf(c.kind);
+      c.kind = KINDS[(idx + 1) % KINDS.length];
+      el.className = "card " + c.kind;
+      el.querySelector(".kind").textContent = KIND_LABEL[c.kind];
+      saveState();
+    });
+    el.querySelector(".del").addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.cards = state.cards.filter((x) => x.id !== c.id);
+      state.wires = state.wires.filter((w) => w.from !== c.id && w.to !== c.id);
+      saveState(); render();
+    });
+    el.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".del") || e.target.closest(".kind")) return;
+      if (e.target.isContentEditable) return;
+      if (connectMode) {
+        e.preventDefault();
+        handleConnectClick(c.id, el);
+        return;
+      }
+      startDrag(e, el, c);
+    });
+  }
+
+  const DRAG_THRESHOLD = 4;
+
+  function startDrag(e, el, c) {
+    // Don't capture/preventDefault yet: a plain click (or the first half of a
+    // dblclick, used to enter text-edit mode) must still reach the browser's
+    // native click/dblclick handling. Only commit to a drag once the pointer
+    // has actually moved past a small threshold.
+    const pid = e.pointerId;
+    const startX = e.clientX, startY = e.clientY;
+    const origX = c.x, origY = c.y;
+    let dragging = false;
+    function move(ev) {
+      const dx = ev.clientX - startX, dy = ev.clientY - startY;
+      if (!dragging) {
+        if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+        dragging = true;
+        el.setPointerCapture(pid);
+        el.classList.add("dragging");
+      }
+      c.x = Math.max(0, origX + dx);
+      c.y = Math.max(0, origY + dy);
+      el.style.left = c.x + "px";
+      el.style.top = c.y + "px";
+      drawWires();
+    }
+    function up() {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      if (dragging) {
+        el.releasePointerCapture(pid);
+        el.classList.remove("dragging");
+        saveState();
+      }
+    }
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
+  function handleConnectClick(id, el) {
+    if (!connectFrom) {
+      connectFrom = id;
+      el.classList.add("connect-src");
+      return;
+    }
+    if (connectFrom !== id) {
+      state.wires.push({ id: "w" + (state.nextId++), from: connectFrom, to: id });
+      saveState();
+    }
+    board.querySelectorAll(".connect-src").forEach((n) => n.classList.remove("connect-src"));
+    connectFrom = null;
+    drawWires();
+  }
+
+  function drawWires() {
+    wireLayer.innerHTML = "";
+    const byId = {};
+    for (const c of state.cards) byId[c.id] = c;
+    for (const w of state.wires) {
+      const from = byId[w.from], to = byId[w.to];
+      if (!from || !to) continue;
+      const p1 = edgePoint(from, to), p2 = edgePoint(to, from);
+      const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const d = "M " + p1.x + " " + p1.y + " C " + mx + " " + p1.y + " " + mx + " " + p2.y + " " + p2.x + " " + p2.y;
+      path.setAttribute("d", d);
+      path.setAttribute("class", "wire-visible");
+      wireLayer.appendChild(path);
+      const hitPath = path.cloneNode();
+      hitPath.setAttribute("class", "wire-hit");
+      hitPath.style.pointerEvents = "stroke";
+      wireLayer.appendChild(hitPath);
+      const delCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      delCircle.setAttribute("cx", mx); delCircle.setAttribute("cy", my); delCircle.setAttribute("r", 8);
+      delCircle.setAttribute("class", "wire-del");
+      delCircle.addEventListener("click", () => {
+        state.wires = state.wires.filter((x) => x.id !== w.id);
+        saveState(); drawWires();
+      });
+      wireLayer.appendChild(delCircle);
+      const delX = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      delX.setAttribute("x", mx); delX.setAttribute("y", my + 3.5); delX.setAttribute("text-anchor", "middle");
+      delX.setAttribute("class", "wire-del-x"); delX.textContent = "×";
+      wireLayer.appendChild(delX);
+    }
+  }
+
+  document.getElementById("btn-add").addEventListener("click", () => {
+    const id = "c" + (state.nextId++);
+    state.cards.push({ id, x: 80 + (state.cards.length % 5) * 40, y: 80 + (state.cards.length % 5) * 40, kind: "none", title: "新しい工程", sub: "", screen: "画面: " });
+    saveState(); render();
+  });
+
+  document.getElementById("btn-connect").addEventListener("click", (e) => {
+    connectMode = !connectMode;
+    e.target.classList.toggle("active", connectMode);
+    connectBanner.classList.toggle("show", connectMode);
+    if (!connectMode) {
+      connectFrom = null;
+      board.querySelectorAll(".connect-src").forEach((n) => n.classList.remove("connect-src"));
+    }
+  });
+
+  document.getElementById("btn-clear").addEventListener("click", () => {
+    if (!confirm("すべてのカードと矢印を消します。よろしいですか？")) return;
+    state = { cards: [], wires: [], nextId: 1 };
+    saveState(); render();
+  });
+
+  function buildExportHtml() {
+    const minX = Math.min(0, ...state.cards.map((c) => c.x));
+    const minY = Math.min(0, ...state.cards.map((c) => c.y));
+    const maxX = Math.max(200, ...state.cards.map((c) => c.x + 210));
+    const maxY = Math.max(150, ...state.cards.map((c) => c.y + 170));
+    const w = maxX - minX + 20, h = maxY - minY + 20;
+    const byId = {};
+    for (const c of state.cards) byId[c.id] = c;
+    const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    let wires = "";
+    for (const wr of state.wires) {
+      const from = byId[wr.from], to = byId[wr.to];
+      if (!from || !to) continue;
+      const p1 = edgePoint(from, to), p2 = edgePoint(to, from);
+      const mx = (p1.x + p2.x) / 2;
+      wires += '<path class="wire" d="M ' + (p1.x - minX + 10) + ' ' + (p1.y - minY + 10) + ' C ' + (mx - minX + 10) + ' ' + (p1.y - minY + 10) + ' ' + (mx - minX + 10) + ' ' + (p2.y - minY + 10) + ' ' + (p2.x - minX + 10) + ' ' + (p2.y - minY + 10) + '"/>';
+    }
+    let cards = "";
+    for (const c of state.cards) {
+      cards += '<article class="node ' + c.kind + '" style="left:' + (c.x - minX + 10) + 'px;top:' + (c.y - minY + 10) + 'px">' +
+        '<h2>' + esc(c.title) + '</h2><div class="sub">' + esc(c.sub) + '</div>' +
+        '<span class="kind">' + esc(KIND_LABEL[c.kind]) + '</span>' +
+        '<div class="screen">' + esc(c.screen) + '</div></article>';
+    }
+    return '<!doctype html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>ワークフロー図</title>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;600&display=swap">\n<style>\n:root{color-scheme:light;--canvas:#f4f2ee;--dot:#ddd8ce;--card:#fff;--border:#e6e2d8;--ink:#21201c;--muted:#69655c;--line:#918b80;--shadow:0 1px 2px #1e1a0f0a,0 8px 20px -8px #1e1a0f24;--agent:#7141d9;--agent-soft:#f1ecff;--chat:#2166df;--chat-soft:#e9f0ff;--none:#716b5e;--none-soft:#ece9e0;--future:#9340bd;--future-soft:#f7ecff}\n@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--canvas:#17161a;--dot:#2a2932;--card:#211f26;--border:#35333c;--ink:#ece9e4;--muted:#b5afa3;--line:#81798e;--agent:#b79bff;--agent-soft:#2c2440;--chat:#7fabff;--chat-soft:#1c2b45;--none:#b8b1a3;--none-soft:#2b2924;--future:#e0a3ff;--future-soft:#3a2545}}\n:root[data-theme="dark"]{color-scheme:dark;--canvas:#17161a;--dot:#2a2932;--card:#211f26;--border:#35333c;--ink:#ece9e4;--muted:#b5afa3;--line:#81798e;--agent:#b79bff;--agent-soft:#2c2440;--chat:#7fabff;--chat-soft:#1c2b45;--none:#b8b1a3;--none-soft:#2b2924;--future:#e0a3ff;--future-soft:#3a2545}\n*{box-sizing:border-box}\nbody{margin:0;padding:32px 16px;color:var(--ink);background:var(--canvas);background-image:radial-gradient(circle,var(--dot) 1.2px,transparent 1.2px);background-size:22px 22px;font-family:Inter,"Noto Sans",system-ui,sans-serif}\n.scroll{overflow:auto;max-width:1100px;margin:auto;border-radius:16px}\n.board{position:relative;width:' + Math.round(w) + 'px;height:' + Math.round(h) + 'px}\n.wires{position:absolute;inset:0;width:' + Math.round(w) + 'px;height:' + Math.round(h) + 'px;pointer-events:none}\n.wire{fill:none;stroke:var(--line);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#a)}\n.node{position:absolute;width:190px;padding:14px 15px 12px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}\n.node::before{content:"";position:absolute;top:0;left:15px;right:15px;height:4px;border-radius:0 0 4px 4px;background:var(--accent)}\n.agent{--accent:var(--agent);--soft:var(--agent-soft)}\n.chat{--accent:var(--chat);--soft:var(--chat-soft)}\n.none{--accent:var(--none);--soft:var(--none-soft)}\n.future{--accent:var(--future);--soft:var(--future-soft);border-style:dashed;border-color:var(--accent)}\n.node h2{margin:0;font:700 14px/1.4 "Space Grotesk",system-ui,sans-serif}\n.sub{margin-top:4px;font-size:11px;color:var(--muted);line-height:1.5}\n.kind{display:inline-block;margin-top:8px;padding:2px 8px;font-size:10px;font-weight:700;border-radius:999px;color:var(--accent);background:var(--soft)}\n.screen{display:block;margin-top:8px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}\n</style>\n</head>\n<body>\n<div class="scroll"><figure class="board">\n<svg class="wires"><defs><marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--line)"/></marker></defs>' + wires + '</svg>\n' + cards + '\n</figure></div>\n</body>\n</html>\n';
+  }
+
+  document.getElementById("btn-export").addEventListener("click", () => {
+    document.getElementById("export-text").value = buildExportHtml();
+    document.getElementById("export-panel").classList.add("show");
+  });
+  document.getElementById("btn-export-close").addEventListener("click", () => {
+    document.getElementById("export-panel").classList.remove("show");
+  });
+  document.getElementById("btn-export-copy").addEventListener("click", async () => {
+    const ta = document.getElementById("export-text");
+    ta.select();
+    try { await navigator.clipboard.writeText(ta.value); hint.textContent = "コピーしました"; }
+    catch (e) { document.execCommand("copy"); hint.textContent = "コピーしました"; }
+    setTimeout(() => { hint.textContent = "カードをドラッグで移動・文字をダブルクリックで編集・カテゴリをクリックで色を切替"; }, 2000);
+  });
+
+  document.getElementById("btn-download").addEventListener("click", async () => {
+    const html = buildExportHtml();
+    const downloads = window.claude ? await window.claude.use("downloads").catch(() => null) : null;
+    if (downloads) {
+      try {
+        await downloads.save({ filename: "workflow-diagram.html", data: html });
+        return;
+      } catch (e) {}
+    }
+    document.getElementById("export-text").value = html;
+    document.getElementById("export-panel").classList.add("show");
+    hint.textContent = "自動ダウンロードが使えないため、上のHTMLをコピーして保存してください";
+  });
+
+  render();
+})();
+</script>
