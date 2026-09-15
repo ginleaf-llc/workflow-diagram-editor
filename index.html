@@ -812,7 +812,7 @@
       <div class="app-panel-header"><strong>APPLICATIONS</strong><small>9 repositories</small></div>
       <label class="app-search"><span class="app-search-icon" aria-hidden="true"></span><input id="appSearch" type="search" placeholder="アプリを検索" aria-label="アプリを検索"></label>
       <nav class="app-list" aria-label="アプリ一覧">
-        <button class="app active" data-app="aikensyu"><b>aikensyu</b><small>AI研修 / 12 diagrams</small></button>
+        <button class="app active" data-app="aikensyu"><b>aikensyu</b><small>経営ダッシュボード / 12 diagrams</small></button>
         <button class="app" data-app="web-service-ginleaf"><b>web-service-ginleaf</b><small>Web基盤 / 8 diagrams</small></button>
         <button class="app" data-app="seikyu_kappo"><b>seikyu_kappo</b><small>請求管理 / 6 diagrams</small></button>
         <button class="app" data-app="base"><b>base</b><small>共通基盤 / 15 diagrams</small></button>
@@ -884,56 +884,59 @@
     const APP_DATA = {
       aikensyu: {
         workflow: {
-          note: '業務とAI機能の接点を編集するビュー',
+          note: 'ソース選択からAI分析・作成物保存までの接点を編集するビュー',
           groups: [
-            { label: 'CONTENT PREPARATION', left: 20, top: 105, width: 405, height: 390 },
-            { label: 'LEARNING & REVIEW', left: 425, top: 105, width: 425, height: 390 }
+            { label: 'SOURCE & CONFIG', left: 20, top: 105, width: 405, height: 390 },
+            { label: 'AI ANALYSIS & OUTPUT', left: 425, top: 105, width: 425, height: 390 }
           ],
           nodes: [
-            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'agent', title: '資料を解析', description: '教材候補と学習目標を抽出' },
-            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'future', title: '内容をレビュー', description: '担当者が構成を確認' },
-            { id: 'n3', displayId: 'N03', x: 460, y: 150, kind: 'chat', title: '対話型研修', description: '受講者の回答に応じて進行' },
-            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'agent', title: 'レポート生成', description: '結果と改善点をまとめる' }
+            { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'ソース選択', description: '使うCSV/JSON/Mdを選ぶ・ON/OFF' },
+            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'none', title: '設定保存', description: '列の役割・指示・しきい値を保存' },
+            { id: 'n3', displayId: 'N03', x: 460, y: 150, kind: 'chat', title: 'AI分析', description: '事実から要点を文章化' },
+            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'none', title: '作成物保存', description: '生成結果を保存・一覧に残す' },
+            { id: 'n5', displayId: 'N05', x: 150, y: 520, kind: 'chat', title: '質問', description: '選んだソースについて聞く' },
+            { id: 'n6', displayId: 'N06', x: 460, y: 520, kind: 'chat', title: 'ソース提案', description: '指示に合うソースをAIが提案' }
           ],
           wires: [
             { id: 'w1', from: 'n1', to: 'n2' },
             { id: 'w2', from: 'n2', to: 'n3' },
-            { id: 'w3', from: 'n3', to: 'n4' }
+            { id: 'w3', from: 'n3', to: 'n4' },
+            { id: 'w4', from: 'n1', to: 'n5' },
+            { id: 'w5', from: 'n1', to: 'n6' }
           ],
-          nextId: 5
+          nextId: 7
         },
         ui: {
-          initials: 'AK', brand: 'aikensyu', subtitle: 'Learning workspace', workspace: 'AI training hub', updated: 'Updated 4 min ago',
-          eyebrow: 'OVERVIEW / AI TRAINING', title: '研修コンテンツの状況', description: 'チーム全体の作成状況と受講状況を確認できます。', filter: '今週',
+          initials: 'AI', brand: 'aikensyu', subtitle: '経営ダッシュボード', workspace: 'AI参謀', updated: 'Updated 4 min ago',
+          eyebrow: 'OVERVIEW / 経営状況', title: '経営状況', description: '選択中のソースから、事実と要点を確認できます。', filter: '対象:今週',
           sources: [
-            { name: '研修コース', meta: '12 sources' }, { name: '教材ライブラリ', meta: '34 documents' },
-            { name: '受講者データ', meta: '428 learners' }, { name: 'レポート', meta: '8 saved views' }
+            { name: '工事台帳.csv', meta: '12 rows' }, { name: '現場日報.md', meta: '34 entries' },
+            { name: '売上速報.csv', meta: '8 rows' }
           ],
           kpis: [
-            { label: '公開中の教材', note: '+2 this week', value: '24', unit: '件', progress: 68 },
-            { label: '今週の受講者', note: '+18.4%', value: '428', unit: '人', progress: 52, color: '#6d858d' },
-            { label: '平均完了率', note: 'target 80%', value: '84', unit: '%', progress: 84, color: '#b06a2c' }
+            { label: '進行中の工事', note: '前週比 +3', value: '18', unit: '件', progress: 68 },
+            { label: '完了率', note: '目標80%', value: '72', unit: '%', progress: 72, color: '#6d858d' },
+            { label: '記録日報', note: '期間内', value: '41', unit: '件', progress: 52, color: '#b06a2c' }
           ],
           activities: [
-            { name: '新人向け AI 基礎研修', status: '公開中', progress: 74 },
-            { name: '情報セキュリティ 2026', status: 'レビュー中', progress: 49 },
-            { name: '営業チーム向けケース演習', status: '下書き', progress: 88, color: '#b06a2c' }
+            { name: '週次の経営状況', status: '保存済み', progress: 100 },
+            { name: '現場の声まとめ', status: '保存済み', progress: 100 },
+            { name: '指示: 赤字予兆と対策を優先', status: '反映中', progress: 60, color: '#b06a2c' }
           ],
-          statuses: [{ name: '教材同期', value: '正常' }, { name: 'AI評価キュー', value: '処理中' }, { name: 'データ連携', value: '待機中' }]
+          statuses: [{ name: 'ソース同期', value: '正常' }, { name: 'AI分析', value: '待機中' }, { name: '保存', value: '正常' }]
         },
         data: {
-          eyebrow: 'REQUEST PATH', title: 'ブラウザからレポート保存まで', footer: 'browser → API → storage', ariaLabel: 'ブラウザからAPIエンドポイントを経由して保存先へ至るデータフロー',
+          eyebrow: 'REQUEST PATH', title: 'ブラウザから保存まで', footer: 'browser → API → storage', ariaLabel: 'ブラウザからAPIエンドポイントを経由して保存先へ至るデータフロー',
           nodes: [
-            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'ブラウザ', description: '受講者の入力と画面表示', x: 18, y: 137 },
-            { id: 'd2', displayId: 'N02', role: 'api', kind: 'agent', label: '[API]', title: 'GET /api/courses', description: 'コースと教材の一覧を取得', x: 230, y: 20 },
-            { id: 'd3', displayId: 'N03', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/session', description: '回答をAI対話へ送信', x: 230, y: 128 },
-            { id: 'd4', displayId: 'N04', role: 'api', kind: 'agent', label: '[AGENT]', title: 'POST /api/reports', description: '学習結果のレポートを生成', x: 230, y: 236 },
-            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[DATABASE]', title: 'PostgreSQL', description: 'コース・受講者・回答', x: 600, y: 72 },
-            { id: 'd6', displayId: 'N06', role: 'storage', kind: 'none', label: '[FILES]', title: 'Object Storage', description: '教材ファイルと生成レポート', x: 600, y: 202 }
+            { id: 'd1', displayId: 'N01', role: 'client', kind: 'none', label: '[CLIENT]', title: 'ブラウザ', description: '選択・指示の入力と画面表示', x: 18, y: 137 },
+            { id: 'd2', displayId: 'N02', role: 'api', kind: 'none', label: '[API]', title: 'POST /api/config', description: '設定・ソース選択を保存', x: 230, y: 10 },
+            { id: 'd3', displayId: 'N03', role: 'api', kind: 'agent', label: '[AGENT]', title: 'POST /api/ai-report', description: 'AI分析を実行して保存', x: 230, y: 130 },
+            { id: 'd4', displayId: 'N04', role: 'api', kind: 'chat', label: '[CHAT]', title: 'POST /api/chat', description: '質問への回答を生成', x: 230, y: 250 },
+            { id: 'd5', displayId: 'N05', role: 'storage', kind: 'none', label: '[FILES]', title: 'demo/data/', description: '設定・AI分析結果のJSON保存', x: 600, y: 137 }
           ],
           wires: [
             { from: 'd1', to: 'd2' }, { from: 'd1', to: 'd3' }, { from: 'd1', to: 'd4' },
-            { from: 'd2', to: 'd5' }, { from: 'd3', to: 'd5' }, { from: 'd3', to: 'd6' }, { from: 'd4', to: 'd6' }
+            { from: 'd2', to: 'd5' }, { from: 'd3', to: 'd5' }
           ]
         }
       },
