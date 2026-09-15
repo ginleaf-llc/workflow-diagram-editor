@@ -27,6 +27,6 @@
 ## 現在の状態
 
 - KVネームスペース `WORKFLOW_KV` は作成済み・`wrangler.jsonc` に反映済み
-- MCPアクセストークンの設定は未完了（上記手順3を正しいコマンドで実行する必要あり）
-- 静的サイト自体は `https://main.workflow-diagram-editor.pages.dev` にデプロイ済み
-- MCPエンドポイント(`functions/api/mcp.js`)は、トークン未設定のためまだ実際には使えない状態
+- MCPアクセストークンは `wrangler pages secret put` で設定済み
+- `https://main.workflow-diagram-editor.pages.dev` にデプロイ済み（commit `33a8773`時点）
+- MCPエンドポイント(`/api/mcp`)は設定完了。利用するAIエージェント側には、設定済みのトークン値を`Authorization: Bearer <token>`ヘッダで渡す
