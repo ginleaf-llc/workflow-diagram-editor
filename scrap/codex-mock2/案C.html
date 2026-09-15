@@ -1,6 +1,497 @@
 <!-- 方向性: アプリをカード状に横並び表示し、選択コンテキストと3ビューの関係を二段ヘッダーで明示する案。 -->
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>案C — Workspace</title><style>
-:root{--canvas:#f4f2ee;--dot:#ddd8ce;--card:#fff;--border:#e6e2d8;--ink:#21201c;--muted:#79756a;--line:#918b80;--agent:#7c4ded;--agent-soft:#f1ecff;--chat:#2166e8;--chat-soft:#e9f0ff;--future:#b34ded;--future-soft:#f7ecff;--shadow:0 1px 2px #1e1a0f0d,0 8px 20px -8px #1e1a0f2e}*{box-sizing:border-box}body{margin:0;height:100vh;overflow:hidden;background:var(--canvas);color:var(--ink);font:13px Inter,"Noto Sans JP",system-ui}button{font:inherit}.mast{height:118px;background:#1f1f22;color:white;padding:16px 24px;display:flex;align-items:center;gap:28px}.mast h1{font-size:15px;margin:0;width:155px}.mast h1 span{display:block;color:#929098;font-size:9px;letter-spacing:.14em;margin-bottom:5px}.apps{display:flex;gap:9px}.app{width:190px;background:#29292e;color:#bab9c0;border:1px solid #3a393f;border-radius:12px;padding:12px;text-align:left;cursor:pointer}.app b{display:block;color:white;font-size:12px;margin-bottom:4px}.app small{font-size:9px}.app.active{background:#312844;border-color:#7956c5;box-shadow:inset 0 -3px 0 var(--agent)}.meta{margin-left:auto;text-align:right;color:#aaa8b0;font-size:10px}.meta b{display:block;color:white;font-size:12px;margin-bottom:4px}.bar{height:58px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:4px}.bar strong{margin-right:24px;font-size:12px}.tab{border:0;border-radius:8px;background:transparent;padding:9px 15px;color:var(--muted);font-weight:700;cursor:pointer}.tab.active{background:var(--agent-soft);color:var(--agent)}.bar .tools{margin-left:auto;display:flex;gap:7px}.tools button{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:8px 11px;font-weight:700}.tools .primary{color:white;background:var(--agent);border-color:var(--agent)}.stage{height:calc(100vh - 176px);position:relative;overflow:auto;background-image:radial-gradient(circle,var(--dot) 1.2px,transparent 1.2px);background-size:22px 22px}.board{position:relative;width:1200px;height:620px}.note{position:absolute;top:24px;left:30px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow)}.note b{display:block;font-size:11px}.note small{color:var(--muted)}.group{position:absolute;border:1px dashed #c9c2b5;border-radius:20px;background:#fff5}.group label{position:absolute;left:15px;top:12px;font-size:9px;font-weight:800;color:var(--muted);letter-spacing:.08em}.node{position:absolute;width:186px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 15px 13px;box-shadow:var(--shadow)}.node:before{content:"";position:absolute;top:0;left:15px;right:15px;height:4px;border-radius:0 0 4px 4px;background:var(--accent)}.node h3{font-size:13px;margin:2px 0 4px}.node p{font-size:10px;color:var(--muted);line-height:1.5;margin:0}.node span{display:inline-block;font-size:9px;font-weight:800;border-radius:99px;margin-top:9px;padding:3px 7px;color:var(--accent);background:var(--soft)}.agent{--accent:var(--agent);--soft:var(--agent-soft)}.chat{--accent:var(--chat);--soft:var(--chat-soft)}.future{--accent:var(--future);--soft:var(--future-soft);border-style:dashed}svg{position:absolute;inset:0}.wire{fill:none;stroke:var(--line);stroke-width:2;marker-end:url(#a)}.other{margin:35px auto;width:min(900px,90%);background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;box-shadow:var(--shadow)}.other h2{margin:0 0 6px}.other>p{color:var(--muted)}.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}.strip div{height:120px;border:1px solid var(--border);border-radius:13px;padding:14px;background:var(--canvas);font-weight:700}.strip small{display:block;color:var(--muted);font-weight:400;margin-top:6px}.hidden{display:none}
-</style></head><body><header class="mast"><h1><span>ENGINEERING SPACE</span>Architecture Desk</h1><div class="apps"><button class="app active" data-app="aikensyu"><b>aikensyu</b><small>AI研修 / 12 diagrams</small></button><button class="app" data-app="web-service-ginleaf"><b>web-service-ginleaf</b><small>Web基盤 / 8 diagrams</small></button><button class="app" data-app="seikyu_kappo"><b>seikyu_kappo</b><small>請求管理 / 6 diagrams</small></button></div><div class="meta"><b>3 Applications</b>横断ワークスペース</div></header><nav class="bar"><strong id="context">aikensyu</strong><button class="tab" data-view="ui">アプリのUI</button><button class="tab" data-view="data">データフロー</button><button class="tab active" data-view="workflow">ワークフロー</button><div class="tools"><button>共有</button><button class="primary">編集する</button></div></nav><main class="stage"><section id="workflow" class="view board"><div class="note"><b id="noteTitle">aikensyu のワークフロー</b><small>業務とAI機能の接点を編集するビュー</small></div><div class="group" style="left:35px;top:105px;width:510px;height:390px"><label>CONTENT PREPARATION</label></div><div class="group" style="left:575px;top:105px;width:570px;height:390px"><label>LEARNING &amp; REVIEW</label></div><svg width="1200" height="620"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#918b80"/></marker></defs><path class="wire" d="M275 205 C320 205 320 350 365 350"/><path class="wire" d="M551 350 C610 350 610 205 660 205"/><path class="wire" d="M846 205 C890 205 890 350 935 350"/></svg><article class="node agent" style="left:90px;top:150px"><h3>資料を解析</h3><p>教材候補と学習目標を抽出</p><span>AIエージェント</span></article><article class="node future" style="left:365px;top:295px"><h3>内容をレビュー</h3><p>担当者が構成を確認</p><span>構想・未実装</span></article><article class="node chat" style="left:660px;top:150px"><h3>対話型研修</h3><p>受講者の回答に応じて進行</p><span>AIチャット</span></article><article class="node agent" style="left:935px;top:295px"><h3>レポート生成</h3><p>結果と改善点をまとめる</p><span>AIエージェント</span></article></section><section id="ui" class="view other hidden"><h2>アプリのUI</h2><p>選択アプリの主要画面を、利用シーンごとに並べるビューです。</p><div class="strip"><div>ホーム<small>全体状況</small></div><div>作成<small>コンテンツ編集</small></div><div>受講<small>学習体験</small></div><div>分析<small>レポート</small></div></div></section><section id="data" class="view other hidden"><h2>データフロー</h2><p>選択アプリ内外のデータの流れと責任境界を示します。</p><div class="strip"><div>Client<small>入力</small></div><div>API<small>検証・処理</small></div><div>AI Service<small>生成・分析</small></div><div>Storage<small>永続化</small></div></div></section></main><script>
-let app='aikensyu',view='workflow';document.querySelectorAll('.app').forEach(b=>b.onclick=()=>{app=b.dataset.app;document.querySelectorAll('.app').forEach(x=>x.classList.toggle('active',x===b));context.textContent=app;noteTitle.textContent=app+' のワークフロー'});document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('hidden',x.id!==view))});
-</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>案C — Workspace</title>
+  <style>
+    :root {
+      --canvas: #f4f2ee;
+      --dot: #ddd8ce;
+      --card: #fff;
+      --border: #e6e2d8;
+      --ink: #21201c;
+      --muted: #79756a;
+      --line: #918b80;
+      --agent: #7c4ded;
+      --agent-soft: #f1ecff;
+      --chat: #2166e8;
+      --chat-soft: #e9f0ff;
+      --future: #b34ded;
+      --future-soft: #f7ecff;
+      --neutral: #66707d;
+      --neutral-soft: #f0f2f4;
+      --shadow: 0 1px 2px #1e1a0f0d, 0 8px 20px -8px #1e1a0f2e;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 13px Inter, "Noto Sans JP", system-ui;
+    }
+    button { font: inherit; }
+
+    .mast {
+      height: 118px;
+      background: #1f1f22;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .mast h1 { font-size: 15px; margin: 0; width: 155px; }
+    .mast h1 span {
+      display: block;
+      color: #929098;
+      font-size: 9px;
+      letter-spacing: .14em;
+      margin-bottom: 5px;
+    }
+    .apps { display: flex; gap: 9px; }
+    .app {
+      width: 190px;
+      background: #29292e;
+      color: #bab9c0;
+      border: 1px solid #3a393f;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .app b { display: block; color: white; font-size: 12px; margin-bottom: 4px; }
+    .app small { font-size: 9px; }
+    .app.active {
+      background: #312844;
+      border-color: #7956c5;
+      box-shadow: inset 0 -3px 0 var(--agent);
+    }
+    .meta { margin-left: auto; text-align: right; color: #aaa8b0; font-size: 10px; }
+    .meta b { display: block; color: white; font-size: 12px; margin-bottom: 4px; }
+
+    .bar {
+      height: 58px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 4px;
+    }
+    .bar strong { margin-right: 24px; font-size: 12px; }
+    .tab {
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      padding: 9px 15px;
+      color: var(--muted);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab.active { background: var(--agent-soft); color: var(--agent); }
+    .bar .tools { margin-left: auto; display: flex; gap: 7px; }
+    .tools button {
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-weight: 700;
+    }
+    .tools .primary { color: white; background: var(--agent); border-color: var(--agent); }
+
+    .stage {
+      height: calc(100vh - 176px);
+      position: relative;
+      overflow: auto;
+      background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.2px);
+      background-size: 22px 22px;
+    }
+    .board { position: relative; width: 1200px; height: 620px; }
+    .note {
+      position: absolute;
+      top: 24px;
+      left: 30px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+    }
+    .note b { display: block; font-size: 11px; }
+    .note small { color: var(--muted); }
+    .group {
+      position: absolute;
+      border: 1px dashed #c9c2b5;
+      border-radius: 20px;
+      background: #fff5;
+    }
+    .group label {
+      position: absolute;
+      left: 15px;
+      top: 12px;
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: .08em;
+    }
+    .node {
+      position: absolute;
+      width: 186px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 15px 13px;
+      box-shadow: var(--shadow);
+    }
+    .node:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 15px;
+      right: 15px;
+      height: 4px;
+      border-radius: 0 0 4px 4px;
+      background: var(--accent);
+    }
+    .node h3 { font-size: 13px; margin: 2px 0 4px; }
+    .node p { font-size: 10px; color: var(--muted); line-height: 1.5; margin: 0; }
+    .node span {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 800;
+      border-radius: 99px;
+      margin-top: 9px;
+      padding: 3px 7px;
+      color: var(--accent);
+      background: var(--soft);
+    }
+    .agent { --accent: var(--agent); --soft: var(--agent-soft); }
+    .chat { --accent: var(--chat); --soft: var(--chat-soft); }
+    .future { --accent: var(--future); --soft: var(--future-soft); border-style: dashed; }
+    .none { --accent: var(--neutral); --soft: var(--neutral-soft); }
+    svg { position: absolute; inset: 0; }
+    .wire { fill: none; stroke: var(--line); stroke-width: 2; marker-end: url(#a); }
+
+    .other {
+      margin: 35px auto;
+      width: min(900px, 90%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+    .other h2 { margin: 0 0 6px; }
+    .other > p { color: var(--muted); }
+    .hidden { display: none; }
+
+    /* UI preview: a neutral product surface inside the architecture shell. */
+    .ui-preview {
+      display: grid;
+      grid-template-columns: 184px minmax(0, 1fr);
+      min-height: 405px;
+      margin-top: 20px;
+      overflow: hidden;
+      color: #1f2933;
+      background: #f7f8fa;
+      border: 1px solid #e1e5e9;
+      border-radius: 15px;
+      box-shadow: 0 6px 18px #26313b12;
+    }
+    .ui-sidebar {
+      padding: 18px 14px;
+      background: #fff;
+      border-right: 1px solid #e5e8ec;
+    }
+    .ui-brand { display: flex; align-items: center; gap: 9px; margin: 1px 5px 24px; }
+    .ui-logo {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: #3d4b59;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+    .ui-brand strong { display: block; color: #25313b; font-size: 12px; }
+    .ui-brand small { display: block; margin-top: 2px; color: #8b949d; font-size: 9px; }
+    .ui-section-label {
+      margin: 0 7px 8px;
+      color: #9aa2aa;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .12em;
+    }
+    .ui-source-nav { display: grid; gap: 4px; }
+    .ui-source {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 9px 8px;
+      color: #68737e;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+    .ui-source.active { color: #25313b; background: #eef2f5; }
+    .ui-source-mark {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 auto;
+      margin-top: 4px;
+      border: 1px solid #aeb7bf;
+      border-radius: 50%;
+    }
+    .ui-source.active .ui-source-mark { border-color: #526272; background: #526272; }
+    .ui-source b { display: block; font-size: 10px; font-weight: 700; }
+    .ui-source small { display: block; margin-top: 3px; color: #9aa2aa; font-size: 9px; }
+    .ui-sidebar-footer {
+      margin-top: 24px;
+      padding: 14px 7px 0;
+      border-top: 1px solid #edf0f2;
+    }
+    .ui-sidebar-footer span { display: block; color: #9aa2aa; font-size: 9px; }
+    .ui-sidebar-footer b { display: block; margin-top: 5px; color: #526272; font-size: 10px; }
+    .ui-sidebar-footer small { display: block; margin-top: 3px; color: #aeb6bd; font-size: 9px; }
+    .ui-main { min-width: 0; padding: 23px 24px 20px; background: #f7f8fa; }
+    .ui-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+    .ui-eyebrow { color: #99a1a9; font-size: 8px; font-weight: 800; letter-spacing: .13em; }
+    .ui-main h3 { margin: 5px 0 3px; color: #25313b; font-size: 17px; letter-spacing: -.02em; }
+    .ui-main p { margin: 0; color: #8a949d; font-size: 10px; }
+    .ui-filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      padding: 7px 9px;
+      color: #64707b;
+      background: #fff;
+      border: 1px solid #dfe4e8;
+      border-radius: 7px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .ui-filter-caret {
+      width: 6px;
+      height: 6px;
+      border-right: 1px solid #7c8791;
+      border-bottom: 1px solid #7c8791;
+      transform: rotate(45deg) translateY(-2px);
+    }
+    .ui-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
+    .ui-kpi { padding: 13px 14px 12px; background: #fff; border: 1px solid #e1e5e9; border-radius: 10px; }
+    .ui-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .ui-kpi-label { color: #69757f; font-size: 9px; font-weight: 700; }
+    .ui-kpi-note { color: #9da5ac; font-size: 8px; white-space: nowrap; }
+    .ui-kpi strong { display: block; margin-top: 8px; color: #27343e; font-size: 23px; letter-spacing: -.05em; }
+    .ui-kpi strong small { margin-left: 3px; color: #82909b; font-size: 10px; font-weight: 500; letter-spacing: 0; }
+    .ui-kpi-line { height: 4px; margin-top: 10px; overflow: hidden; background: #edf0f2; border-radius: 99px; }
+    .ui-kpi-line i { display: block; width: 68%; height: 100%; background: #6b7c8c; border-radius: inherit; }
+    .ui-kpi:nth-child(2) .ui-kpi-line i { width: 52%; background: #8998a5; }
+    .ui-kpi:nth-child(3) .ui-kpi-line i { width: 84%; background: #526272; }
+    .ui-panels { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(150px, .75fr); gap: 10px; margin-top: 10px; }
+    .ui-panel { min-width: 0; padding: 13px 14px; background: #fff; border: 1px solid #e1e5e9; border-radius: 10px; }
+    .ui-panel h4 { margin: 0 0 11px; color: #52606b; font-size: 10px; }
+    .ui-activity { display: grid; gap: 8px; }
+    .ui-activity-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+    .ui-activity-row b { overflow: hidden; color: #4c5964; font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .ui-activity-row small { color: #9ba4ac; font-size: 8px; }
+    .ui-activity-bar { height: 4px; margin-top: 4px; overflow: hidden; background: #eef1f3; border-radius: 99px; }
+    .ui-activity-bar i { display: block; width: 74%; height: 100%; background: #9aa8b4; border-radius: inherit; }
+    .ui-activity-row:nth-child(2) .ui-activity-bar i { width: 49%; }
+    .ui-activity-row:nth-child(3) .ui-activity-bar i { width: 88%; background: #667888; }
+    .ui-status-list { display: grid; gap: 10px; }
+    .ui-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .ui-status span { color: #76818a; font-size: 9px; }
+    .ui-status b { color: #44515d; font-size: 10px; }
+    .ui-status b:before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 5px 1px 0; border-radius: 50%; background: #8aa18d; }
+    .ui-status:nth-child(2) b:before { background: #c0a36d; }
+    .ui-status:nth-child(3) b:before { background: #9ca7af; }
+
+    /* Data preview: request paths keep the same card-and-wire language as the workflow. */
+    .flow-card {
+      margin-top: 20px;
+      overflow-x: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+    }
+    .flow-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 17px 18px 0; }
+    .flow-eyebrow { color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .14em; }
+    .flow-header h3 { margin: 5px 0 0; font-size: 14px; }
+    .flow-legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; color: var(--muted); font-size: 9px; }
+    .flow-legend span { white-space: nowrap; }
+    .legend-dot { display: inline-block; width: 7px; height: 7px; margin-right: 4px; border-radius: 50%; background: var(--neutral); }
+    .legend-dot.api { background: var(--agent); }
+    .legend-dot.session { background: var(--chat); }
+    .flow-board { position: relative; width: 820px; height: 360px; }
+    .flow-board svg { width: 820px; height: 360px; }
+    .data-wire { stroke: #9aa1a8; marker-end: url(#dataArrow); }
+    .flow-column-label {
+      position: absolute;
+      top: 15px;
+      color: #b0b5ba;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .13em;
+    }
+    .flow-column-label.client { left: 28px; }
+    .flow-column-label.endpoint { left: 240px; }
+    .flow-column-label.storage { left: 610px; }
+    .data-node { width: 164px; padding: 15px 13px 12px; border-radius: 13px; }
+    .data-node h3 { font-size: 11px; margin-top: 2px; }
+    .data-node p { font-size: 9px; }
+    .data-node span { margin-top: 8px; font-size: 8px; }
+    .browser-node { left: 18px; top: 137px; }
+    .course-api { left: 230px; top: 20px; }
+    .session-api { left: 230px; top: 128px; }
+    .report-api { left: 230px; top: 236px; }
+    .database-node { left: 600px; top: 72px; }
+    .object-node { left: 600px; top: 202px; }
+    .flow-footer { display: flex; align-items: center; gap: 8px; padding: 0 18px 16px; color: var(--muted); font-size: 9px; }
+    .flow-footer code { padding: 3px 6px; color: #59636d; background: #f3f4f5; border-radius: 5px; font: 9px ui-monospace, SFMono-Regular, monospace; }
+
+    @media (max-width: 760px) {
+      .mast { gap: 14px; overflow-x: auto; }
+      .meta { display: none; }
+      .bar { padding: 0 14px; }
+      .bar strong { margin-right: 8px; }
+      .bar .tools { display: none; }
+      .other { width: calc(100% - 28px); padding: 20px; }
+      .ui-preview { grid-template-columns: 155px minmax(0, 1fr); }
+      .ui-panels { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="mast">
+    <h1><span>ENGINEERING SPACE</span>Architecture Desk</h1>
+    <div class="apps">
+      <button class="app active" data-app="aikensyu"><b>aikensyu</b><small>AI研修 / 12 diagrams</small></button>
+      <button class="app" data-app="web-service-ginleaf"><b>web-service-ginleaf</b><small>Web基盤 / 8 diagrams</small></button>
+      <button class="app" data-app="seikyu_kappo"><b>seikyu_kappo</b><small>請求管理 / 6 diagrams</small></button>
+    </div>
+    <div class="meta"><b>3 Applications</b>横断ワークスペース</div>
+  </header>
+
+  <nav class="bar">
+    <strong id="context">aikensyu</strong>
+    <button class="tab" data-view="ui">アプリのUI</button>
+    <button class="tab" data-view="data">データフロー</button>
+    <button class="tab active" data-view="workflow">ワークフロー</button>
+    <div class="tools"><button>共有</button><button class="primary">編集する</button></div>
+  </nav>
+
+  <main class="stage">
+    <section id="workflow" class="view board">
+      <div class="note"><b id="noteTitle">aikensyu のワークフロー</b><small>業務とAI機能の接点を編集するビュー</small></div>
+      <div class="group" style="left:35px;top:105px;width:510px;height:390px"><label>CONTENT PREPARATION</label></div>
+      <div class="group" style="left:575px;top:105px;width:570px;height:390px"><label>LEARNING &amp; REVIEW</label></div>
+      <svg width="1200" height="620" aria-hidden="true">
+        <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#918b80" /></marker></defs>
+        <path class="wire" d="M275 205 C320 205 320 350 365 350" />
+        <path class="wire" d="M551 350 C610 350 610 205 660 205" />
+        <path class="wire" d="M846 205 C890 205 890 350 935 350" />
+      </svg>
+      <article class="node agent" style="left:90px;top:150px"><h3>資料を解析</h3><p>教材候補と学習目標を抽出</p><span>AIエージェント</span></article>
+      <article class="node future" style="left:365px;top:295px"><h3>内容をレビュー</h3><p>担当者が構成を確認</p><span>構想・未実装</span></article>
+      <article class="node chat" style="left:660px;top:150px"><h3>対話型研修</h3><p>受講者の回答に応じて進行</p><span>AIチャット</span></article>
+      <article class="node agent" style="left:935px;top:295px"><h3>レポート生成</h3><p>結果と改善点をまとめる</p><span>AIエージェント</span></article>
+    </section>
+
+    <section id="ui" class="view other hidden">
+      <h2>アプリのUI</h2>
+      <p>選択アプリの主要画面を、実際のダッシュボードに近い構成で確認するビューです。</p>
+      <div class="ui-preview" aria-label="aikensyu のダッシュボードプレビュー">
+        <aside class="ui-sidebar">
+          <div class="ui-brand">
+            <span class="ui-logo">AK</span>
+            <div><strong>aikensyu</strong><small>Learning workspace</small></div>
+          </div>
+          <div class="ui-section-label">SOURCES</div>
+          <nav class="ui-source-nav" aria-label="ソース一覧">
+            <a class="ui-source active" href="#ui"><span class="ui-source-mark"></span><span><b>研修コース</b><small>12 sources</small></span></a>
+            <a class="ui-source" href="#ui"><span class="ui-source-mark"></span><span><b>教材ライブラリ</b><small>34 documents</small></span></a>
+            <a class="ui-source" href="#ui"><span class="ui-source-mark"></span><span><b>受講者データ</b><small>428 learners</small></span></a>
+            <a class="ui-source" href="#ui"><span class="ui-source-mark"></span><span><b>レポート</b><small>8 saved views</small></span></a>
+          </nav>
+          <div class="ui-sidebar-footer"><span>WORKSPACE</span><b>AI training hub</b><small>Updated 4 min ago</small></div>
+        </aside>
+        <div class="ui-main">
+          <div class="ui-header">
+            <div><span class="ui-eyebrow">OVERVIEW / AI TRAINING</span><h3>研修コンテンツの状況</h3><p>チーム全体の作成状況と受講状況を確認できます。</p></div>
+            <button class="ui-filter">今週<span class="ui-filter-caret" aria-hidden="true"></span></button>
+          </div>
+          <div class="ui-kpis">
+            <div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">公開中の教材</span><span class="ui-kpi-note">+2 this week</span></div><strong>24<small>件</small></strong><div class="ui-kpi-line"><i></i></div></div>
+            <div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">今週の受講者</span><span class="ui-kpi-note">+18.4%</span></div><strong>428<small>人</small></strong><div class="ui-kpi-line"><i></i></div></div>
+            <div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">平均完了率</span><span class="ui-kpi-note">target 80%</span></div><strong>84<small>%</small></strong><div class="ui-kpi-line"><i></i></div></div>
+          </div>
+          <div class="ui-panels">
+            <section class="ui-panel"><h4>最近のコンテンツ</h4><div class="ui-activity">
+              <div class="ui-activity-row"><div><b>新人向け AI 基礎研修</b><div class="ui-activity-bar"><i></i></div></div><small>公開中</small></div>
+              <div class="ui-activity-row"><div><b>情報セキュリティ 2026</b><div class="ui-activity-bar"><i></i></div></div><small>レビュー中</small></div>
+              <div class="ui-activity-row"><div><b>営業チーム向けケース演習</b><div class="ui-activity-bar"><i></i></div></div><small>下書き</small></div>
+            </div></section>
+            <section class="ui-panel"><h4>運用ステータス</h4><div class="ui-status-list">
+              <div class="ui-status"><span>教材同期</span><b>正常</b></div>
+              <div class="ui-status"><span>AI評価キュー</span><b>処理中</b></div>
+              <div class="ui-status"><span>データ連携</span><b>待機中</b></div>
+            </div></section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="data" class="view other hidden">
+      <h2>データフロー</h2>
+      <p>選択アプリ内外のデータの流れと責任境界を、リクエスト単位で確認するビューです。</p>
+      <div class="flow-card">
+        <div class="flow-header"><div><span class="flow-eyebrow">REQUEST PATH</span><h3>ブラウザから保存まで</h3></div><div class="flow-legend"><span><i class="legend-dot"></i>クライアント</span><span><i class="legend-dot api"></i>API</span><span><i class="legend-dot session"></i>AI連携</span></div></div>
+        <div class="flow-board" aria-label="ブラウザからAPIエンドポイントを経由して保存先へ至るデータフロー">
+          <span class="flow-column-label client">CLIENT</span><span class="flow-column-label endpoint">API ENDPOINTS</span><span class="flow-column-label storage">PERSISTENCE</span>
+          <svg width="820" height="360" viewBox="0 0 820 360" aria-hidden="true">
+            <defs><marker id="dataArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#9aa1a8" /></marker></defs>
+            <path class="wire data-wire" d="M182 190 C202 190 207 70 230 70" />
+            <path class="wire data-wire" d="M182 190 C205 190 207 178 230 178" />
+            <path class="wire data-wire" d="M182 190 C202 190 207 286 230 286" />
+            <path class="wire data-wire" d="M394 70 C470 70 520 122 600 122" />
+            <path class="wire data-wire" d="M394 178 C470 178 520 122 600 122" />
+            <path class="wire data-wire" d="M394 178 C470 178 520 252 600 252" />
+            <path class="wire data-wire" d="M394 286 C470 286 520 252 600 252" />
+          </svg>
+          <article class="node none data-node browser-node"><h3>ブラウザ</h3><p>受講者の入力と画面表示</p><span>CLIENT</span></article>
+          <article class="node agent data-node course-api"><h3>GET /api/courses</h3><p>コースと教材の一覧を取得</p><span>API</span></article>
+          <article class="node chat data-node session-api"><h3>POST /api/session</h3><p>回答をAI対話へ送信</p><span>AI CHAT</span></article>
+          <article class="node agent data-node report-api"><h3>POST /api/reports</h3><p>学習結果のレポートを生成</p><span>AI AGENT</span></article>
+          <article class="node none data-node database-node"><h3>PostgreSQL</h3><p>コース・受講者・回答</p><span>DATABASE</span></article>
+          <article class="node none data-node object-node"><h3>Object Storage</h3><p>教材ファイルと生成レポート</p><span>FILES</span></article>
+        </div>
+        <div class="flow-footer"><span>主要な呼び出し:</span><code>browser → API → storage</code></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let app = 'aikensyu', view = 'workflow';
+    document.querySelectorAll('.app').forEach(b => b.onclick = () => {
+      app = b.dataset.app;
+      document.querySelectorAll('.app').forEach(x => x.classList.toggle('active', x === b));
+      context.textContent = app;
+      noteTitle.textContent = app + ' のワークフロー';
+    });
+    document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+      view = b.dataset.view;
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
+      document.querySelectorAll('.view').forEach(x => x.classList.toggle('hidden', x.id !== view));
+    });
+  </script>
+</body>
+</html>
