@@ -23,6 +23,10 @@
       --chat-soft: #e8eff1;
       --amber: #b06a2c;
       --amber-soft: #fbefe5;
+      --warn: #a96127;
+      --warn-soft: #fbefe5;
+      --ok: #28755b;
+      --ok-soft: #e7f3ec;
       --neutral: #65717b;
       --neutral-soft: #eef0f2;
       --shadow: 0 1px 2px rgba(20, 24, 28, .08);
@@ -610,132 +614,125 @@
       margin: 0;
     }
 
-    /* UI preview: a neutral product surface inside the architecture shell. */
-    .ui-preview {
-      display: grid;
-      grid-template-columns: 184px minmax(0, 1fr);
-      min-height: 405px;
+    /* UI screenshot viewer: the mapping is explicit and stale captures stay visible. */
+    .ui-screen-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       margin-top: 20px;
-      overflow: hidden;
+      padding: 12px 14px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: var(--shadow);
+      font-size: 10px;
+    }
+    .ui-screen-summary strong {
       color: var(--ink);
-      background: #f7f8f9;
+      font: 700 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
+    .ui-screen-summary code,
+    .ui-screen-commit code {
+      padding: 2px 5px;
+      color: var(--ink);
+      background: var(--neutral-soft);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font: 9px/1.2 "JetBrains Mono", ui-monospace, monospace;
+    }
+    .ui-screen-summary small { color: var(--muted); }
+    .ui-screen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .ui-screen-card {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: 4px;
       box-shadow: var(--shadow);
     }
-    .ui-sidebar {
-      padding: 18px 14px;
-      background: var(--card);
-      border-right: 1px solid var(--border);
-    }
-    .ui-brand { display: flex; align-items: center; gap: 9px; margin: 1px 5px 24px; }
-    .ui-logo {
-      display: grid;
-      width: 30px;
-      height: 30px;
-      place-items: center;
-      border-radius: 4px;
-      color: #fff;
-      background: var(--teal);
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .04em;
-    }
-    .ui-brand strong { display: block; color: var(--ink); font: 700 12px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
-    .ui-brand small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
-    .ui-section-label {
-      margin: 0 7px 8px;
-      color: #7c8790;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: .12em;
-    }
-    .ui-source-nav { display: grid; gap: 4px; }
-    .ui-source {
+    .ui-screen-card-header {
       display: flex;
       align-items: flex-start;
-      gap: 9px;
-      padding: 9px 8px;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 14px 11px;
+    }
+    .ui-screen-step {
+      display: block;
       color: var(--muted);
-      border-radius: 4px;
-      text-decoration: none;
-      transition: background .1s ease-out;
+      font: 8px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+      letter-spacing: .12em;
     }
-    .ui-source:hover { background: #f0f3f4; }
-    .ui-source.active { color: var(--ink); background: var(--teal-soft); }
-    .ui-source-mark {
-      width: 7px;
-      height: 7px;
+    .ui-screen-card h3 {
+      margin: 5px 0 0;
+      color: var(--ink);
+      font: 700 13px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
+    .ui-screen-status {
       flex: 0 0 auto;
-      margin-top: 4px;
-      border: 1px solid #aeb7bf;
+      padding: 4px 6px;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+      font: 800 8px/1.1 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+      letter-spacing: .04em;
+      text-transform: uppercase;
     }
-    .ui-source.active .ui-source-mark { border-color: var(--teal); background: var(--teal); }
-    .ui-source b { display: block; font-size: 10px; font-weight: 700; }
-    .ui-source small { display: block; margin-top: 3px; color: #9aa2aa; font-size: 9px; }
-    .ui-sidebar-footer {
-      margin-top: 24px;
-      padding: 14px 7px 0;
+    .ui-screen-status.proposed { color: var(--warn); background: var(--warn-soft); }
+    .ui-screen-status.confirmed { color: var(--ok); background: var(--ok-soft); }
+    .ui-screen-thumbnail {
+      display: grid;
+      aspect-ratio: 16 / 10;
+      margin: 0 14px;
+      overflow: hidden;
+      place-items: center;
+      color: var(--muted);
+      background: #f7f8f9;
+      border: 1px dashed #aeb7bf;
+      text-align: center;
+    }
+    .ui-screen-thumbnail img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .ui-screen-placeholder { display: grid; gap: 5px; padding: 15px; }
+    .ui-screen-placeholder strong {
+      color: var(--warn);
+      font: 800 12px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
+    .ui-screen-placeholder small { font-size: 9px; line-height: 1.45; }
+    .ui-screen-meta {
+      display: grid;
+      gap: 7px;
+      margin-top: 12px;
+      padding: 11px 14px 13px;
       border-top: 1px solid var(--border);
     }
-    .ui-sidebar-footer span { display: block; color: #9aa2aa; font-size: 9px; }
-    .ui-sidebar-footer b { display: block; margin-top: 5px; color: var(--ink); font: 700 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
-    .ui-sidebar-footer small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
-    .ui-main { min-width: 0; padding: 23px 24px 20px; background: #f7f8f9; }
-    .ui-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-    .ui-eyebrow { color: var(--teal); font: 700 8px/1.2 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: .13em; }
-    .ui-main h3 { margin: 5px 0 3px; color: var(--ink); font: 700 17px/1.25 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: -.02em; }
-    .ui-main p { margin: 0; color: var(--muted); font: 10px/1.5 "Public Sans", "Noto Sans JP", system-ui, sans-serif; }
-    .ui-filter {
-      display: inline-flex;
+    .ui-screen-commit {
+      display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
-      flex: 0 0 auto;
-      padding: 7px 9px;
+      gap: 5px;
       color: var(--muted);
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 3px;
+      font: 9px/1.35 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+    }
+    .ui-screen-commit.is-stale { color: var(--warn); }
+    .ui-screen-commit.is-current { color: var(--ok); }
+    .ui-screen-note {
+      color: var(--muted);
       font-size: 10px;
-      font-weight: 700;
-      font-family: "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace;
+      line-height: 1.5;
     }
-    .ui-filter-caret {
-      width: 6px;
-      height: 6px;
-      border-right: 1px solid var(--muted);
-      border-bottom: 1px solid var(--muted);
-      transform: rotate(45deg) translateY(-2px);
-    }
-    .ui-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
-    .ui-kpi { padding: 13px 14px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
-    .ui-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .ui-kpi-label { color: var(--muted); font: 600 9px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
-    .ui-kpi-note { color: #7c8790; font: 8px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; white-space: nowrap; }
-    .ui-kpi strong { display: block; margin-top: 8px; color: var(--ink); font: 700 23px/1 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; letter-spacing: -.05em; }
-    .ui-kpi strong small { margin-left: 3px; color: var(--muted); font: 500 10px/1 "Public Sans", "Noto Sans JP", system-ui, sans-serif; letter-spacing: 0; }
-    .ui-kpi-line { height: 4px; margin-top: 10px; overflow: hidden; background: #e5e8eb; border-radius: 2px; }
-    .ui-kpi-line i { display: block; width: 68%; height: 100%; background: var(--teal); border-radius: inherit; }
-    .ui-kpi:nth-child(2) .ui-kpi-line i { width: 52%; background: #6d858d; }
-    .ui-kpi:nth-child(3) .ui-kpi-line i { width: 84%; background: var(--amber); }
-    .ui-panels { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(150px, .75fr); gap: 10px; margin-top: 10px; }
-    .ui-panel { min-width: 0; padding: 13px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
-    .ui-panel h4 { margin: 0 0 11px; color: var(--ink); font: 700 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
-    .ui-activity { display: grid; gap: 8px; }
-    .ui-activity-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
-    .ui-activity-row b { overflow: hidden; color: var(--ink); font: 600 9px/1.3 "Public Sans", "Noto Sans JP", system-ui, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
-    .ui-activity-row small { color: var(--muted); font: 8px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
-    .ui-activity-bar { height: 4px; margin-top: 4px; overflow: hidden; background: #e9ecee; border-radius: 2px; }
-    .ui-activity-bar i { display: block; width: 74%; height: 100%; background: var(--teal); border-radius: inherit; }
-    .ui-activity-row:nth-child(2) .ui-activity-bar i { width: 49%; }
-    .ui-activity-row:nth-child(3) .ui-activity-bar i { width: 88%; background: var(--amber); }
-    .ui-status-list { display: grid; gap: 10px; }
-    .ui-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .ui-status span { color: var(--muted); font-size: 9px; }
-    .ui-status b { color: var(--ink); font: 600 10px/1.3 "JetBrains Mono", "Noto Sans JP", ui-monospace, monospace; }
-    .ui-status b:before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 5px 1px 0; background: var(--teal); }
-    .ui-status:nth-child(2) b:before { background: var(--amber); }
-    .ui-status:nth-child(3) b:before { background: #87919a; }
 
     /* Data preview: request paths keep the same card-and-wire language as the workflow. */
     .flow-card {
@@ -796,8 +793,8 @@
       .bar strong { margin-right: 8px; }
       .bar .tools { display: none; }
       .other { width: calc(100% - 28px); padding: 20px; }
-      .ui-preview { grid-template-columns: 155px minmax(0, 1fr); }
-      .ui-panels { grid-template-columns: 1fr; }
+      .ui-screen-summary { align-items: flex-start; flex-direction: column; }
+      .ui-screen-grid { grid-template-columns: 1fr; }
       .workflow-editor { left: 875px; }
     }
 
@@ -854,7 +851,7 @@
 
     <section id="ui" class="view other hidden">
       <h2>アプリのUI</h2>
-      <p id="uiDescription">選択アプリの主要画面を、実際のダッシュボードに近い構成で確認するビューです。</p>
+      <p id="uiDescription">開発環境で撮影した画面と、対応するワークフローステップを確認するビューです。</p>
       <div id="uiContent"></div>
     </section>
 
@@ -903,23 +900,41 @@
           nextId: 7
         },
         ui: {
-          initials: 'AI', brand: 'aikensyu', subtitle: '経営ダッシュボード', workspace: 'AI参謀', updated: 'Updated 4 min ago',
-          eyebrow: 'OVERVIEW / 経営状況', title: '経営状況', description: '選択中のソースから、事実と要点を確認できます。', filter: '対象:今週',
-          sources: [
-            { name: '工事台帳.csv', meta: '12 rows' }, { name: '現場日報.md', meta: '34 entries' },
-            { name: '売上速報.csv', meta: '8 rows' }
-          ],
-          kpis: [
-            { label: '進行中の工事', note: '前週比 +3', value: '18', unit: '件', progress: 68 },
-            { label: '完了率', note: '目標80%', value: '72', unit: '%', progress: 72, color: '#6d858d' },
-            { label: '記録日報', note: '期間内', value: '41', unit: '件', progress: 52, color: '#b06a2c' }
-          ],
-          activities: [
-            { name: '週次の経営状況', status: '保存済み', progress: 100 },
-            { name: '現場の声まとめ', status: '保存済み', progress: 100 },
-            { name: '指示: 赤字予兆と対策を優先', status: '反映中', progress: 60, color: '#b06a2c' }
-          ],
-          statuses: [{ name: 'ソース同期', value: '正常' }, { name: 'AI分析', value: '待機中' }, { name: '保存', value: '正常' }]
+          currentCommit: '33a8773',
+          screens: [
+            {
+              stepId: 'n1',
+              label: 'ソース選択画面',
+              screenshotUrl: null,
+              status: 'proposed',
+              capturedAtCommit: null,
+              note: '担当者が実際にこの画面を撮影・確認してください'
+            },
+            {
+              stepId: 'n2',
+              label: '設定保存画面',
+              screenshotUrl: null,
+              status: 'proposed',
+              capturedAtCommit: null,
+              note: '担当者が実際にこの画面を撮影・確認してください'
+            },
+            {
+              stepId: 'n3',
+              label: 'AI分析画面',
+              screenshotUrl: null,
+              status: 'proposed',
+              capturedAtCommit: null,
+              note: '担当者が実際にこの画面を撮影・確認してください'
+            },
+            {
+              stepId: 'n4',
+              label: '作成物保存画面',
+              screenshotUrl: null,
+              status: 'proposed',
+              capturedAtCommit: null,
+              note: '担当者が実際にこの画面を撮影・確認してください'
+            }
+          ]
         },
         data: {
           eyebrow: 'REQUEST PATH', title: 'ブラウザから保存まで', footer: 'browser → API → storage', ariaLabel: 'ブラウザからAPIエンドポイントを経由して保存先へ至るデータフロー',
@@ -1415,26 +1430,52 @@
       }
     }
 
+    function uiEmptyStateMarkup() {
+      return '<div class="empty-state ui-empty-state"><span class="empty-kicker">NO SCREENS</span><h3>このアプリの画面はまだ登録されていません</h3><p>スクリーンショットを登録すると、ワークフローとの対応を確認できます</p></div>';
+    }
+
+    function screenStatus(screen) {
+      return screen.status === 'confirmed' ? 'confirmed' : 'proposed';
+    }
+
+    function screenCommitMarkup(screen, currentCommit) {
+      const capturedCommit = String(screen.capturedAtCommit || '').trim();
+      if (!capturedCommit) return '<span class="ui-screen-commit">未撮影</span>';
+
+      const capturedMarkup = '<span>撮影: commit <code>' + escapeHtml(capturedCommit) + '</code></span>';
+      if (!currentCommit) return '<div class="ui-screen-commit">' + capturedMarkup + '</div>';
+
+      const isCurrent = capturedCommit === currentCommit;
+      const revisionMarkup = isCurrent
+        ? '<span>現在のcommitと一致</span>'
+        : '<span>現在のcommit <code>' + escapeHtml(currentCommit) + '</code>との差分あり</span>';
+      return '<div class="ui-screen-commit ' + (isCurrent ? 'is-current' : 'is-stale') + '">' + capturedMarkup + revisionMarkup + '</div>';
+    }
+
     function buildUiMarkup(data) {
-      const sources = data.sources.map((source, index) => '<a class="ui-source' + (index === 0 ? ' active' : '') + '" href="#ui"><span class="ui-source-mark"></span><span><b>' + escapeHtml(source.name) + '</b><small>' + escapeHtml(source.meta) + '</small></span></a>').join('');
-      const kpis = data.kpis.map(kpi => {
-        const progress = clamp(numberOr(kpi.progress, 0), 0, 100);
-        const color = kpi.color ? ' style="background:' + escapeHtml(kpi.color) + ';"' : '';
-        return '<div class="ui-kpi"><div class="ui-kpi-top"><span class="ui-kpi-label">' + escapeHtml(kpi.label) + '</span><span class="ui-kpi-note">' + escapeHtml(kpi.note) + '</span></div><strong>' + escapeHtml(kpi.value) + '<small>' + escapeHtml(kpi.unit) + '</small></strong><div class="ui-kpi-line"><i style="width:' + progress + '%;' + (color ? 'background:' + escapeHtml(kpi.color) + ';' : '') + '"></i></div></div>';
+      const currentCommit = String(data.currentCommit || '').trim();
+      const currentCommitMarkup = currentCommit
+        ? '<code>' + escapeHtml(currentCommit) + '</code>'
+        : '<span>未登録</span>';
+      const screens = data.screens.map(screen => {
+        const status = screenStatus(screen);
+        const screenshotUrl = String(screen.screenshotUrl || '').trim();
+        const thumbnail = screenshotUrl
+          ? '<img src="' + escapeHtml(screenshotUrl) + '" alt="' + escapeHtml(screen.label) + 'のスクリーンショット">'
+          : '<div class="ui-screen-placeholder"><strong>未撮影</strong><small>スクリーンショットはまだ登録されていません</small></div>';
+        return '<article class="ui-screen-card" data-step-id="' + escapeHtml(screen.stepId) + '"><header class="ui-screen-card-header"><div><span class="ui-screen-step">STEP ' + escapeHtml(screen.stepId) + '</span><h3>' + escapeHtml(screen.label) + '</h3></div><span class="ui-screen-status ' + status + '" aria-label="状態: ' + status + '">' + status + '</span></header><div class="ui-screen-thumbnail" aria-label="' + escapeHtml(screen.label) + 'のサムネイル">' + thumbnail + '</div><div class="ui-screen-meta">' + screenCommitMarkup(screen, currentCommit) + '<p class="ui-screen-note">' + escapeHtml(screen.note || '') + '</p></div></article>';
       }).join('');
-      const activities = data.activities.map(activity => {
-        const progress = clamp(numberOr(activity.progress, 0), 0, 100);
-        const color = activity.color ? ' background:' + escapeHtml(activity.color) + ';' : '';
-        return '<div class="ui-activity-row"><div><b>' + escapeHtml(activity.name) + '</b><div class="ui-activity-bar"><i style="width:' + progress + '%;' + color + '"></i></div></div><small>' + escapeHtml(activity.status) + '</small></div>';
-      }).join('');
-      const statuses = data.statuses.map(status => '<div class="ui-status"><span>' + escapeHtml(status.name) + '</span><b>' + escapeHtml(status.value) + '</b></div>').join('');
-      return '<div class="ui-preview" aria-label="' + escapeHtml(data.brand) + ' のダッシュボードプレビュー"><aside class="ui-sidebar"><div class="ui-brand"><span class="ui-logo">' + escapeHtml(data.initials) + '</span><div><strong>' + escapeHtml(data.brand) + '</strong><small>' + escapeHtml(data.subtitle) + '</small></div></div><div class="ui-section-label">SOURCES</div><nav class="ui-source-nav" aria-label="ソース一覧">' + sources + '</nav><div class="ui-sidebar-footer"><span>WORKSPACE</span><b>' + escapeHtml(data.workspace) + '</b><small>' + escapeHtml(data.updated) + '</small></div></aside><div class="ui-main"><div class="ui-header"><div><span class="ui-eyebrow">' + escapeHtml(data.eyebrow) + '</span><h3>' + escapeHtml(data.title) + '</h3><p>' + escapeHtml(data.description) + '</p></div><button class="ui-filter">' + escapeHtml(data.filter) + '<span class="ui-filter-caret" aria-hidden="true"></span></button></div><div class="ui-kpis">' + kpis + '</div><div class="ui-panels"><section class="ui-panel"><h4>最近のアクティビティ</h4><div class="ui-activity">' + activities + '</div></section><section class="ui-panel"><h4>運用ステータス</h4><div class="ui-status-list">' + statuses + '</div></section></div></div></div>';
+      return '<div class="ui-screen-viewer" aria-label="' + escapeHtml(app) + 'のスクリーンショット対応表"><div class="ui-screen-summary"><div><strong>SCREENSHOT MAPPING</strong><small> ワークフローステップに対応する画面</small></div><div><strong>現在のcommit</strong> ' + currentCommitMarkup + '</div></div><div class="ui-screen-grid">' + screens + '</div></div>';
     }
 
     function renderUiView() {
       const data = hasAppData(app) ? APP_DATA[app].ui : null;
-      uiDescription.textContent = data ? data.description : 'このアプリの構成はまだ登録されていません';
-      uiContent.innerHTML = data ? buildUiMarkup(data) : emptyStateMarkup('アプリのUI');
+      const screens = data && Array.isArray(data.screens) ? data.screens : null;
+      const hasScreens = screens && screens.length > 0;
+      uiDescription.textContent = hasScreens
+        ? '開発環境で撮影した画面と、対応するワークフローステップを確認するビューです。'
+        : 'このアプリの画面はまだ登録されていません';
+      uiContent.innerHTML = hasScreens ? buildUiMarkup(data) : uiEmptyStateMarkup();
     }
 
     function dataWirePathMarkup(data) {
