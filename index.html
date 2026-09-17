@@ -970,7 +970,42 @@
           nextId: 5
         },
         ui: {
+          currentCommit: 'web-service-ginleaf@dc62833',
           initials: 'WG', brand: 'web-service-ginleaf', subtitle: '社内知見サイト', workspace: 'Ginleaf Web', updated: 'Updated 11 min ago',
+          screens: [
+            {
+              stepId: 'n1',
+              label: 'ドキュメント表示画面（執筆結果）',
+              screenshotUrl: 'docs/ui-map/web-service-ginleaf/n1-docs-write.png',
+              status: 'proposed',
+              capturedAtCommit: 'web-service-ginleaf@dc62833',
+              note: 'ローカルの /docs/アーキテクチャ を実際に開いて撮影。Web上の編集画面は未実装のため、docs/への執筆結果を確認する公開画面として登録しています。内容の確認をお願いします'
+            },
+            {
+              stepId: 'n2',
+              label: '共有権限設定（Access認証前）',
+              screenshotUrl: 'docs/ui-map/web-service-ginleaf/n2-share-permissions.png',
+              status: 'proposed',
+              capturedAtCommit: 'web-service-ginleaf@dc62833',
+              note: 'ローカルの /docs-private/admin をAccess未認証で実際に開いて撮影。共有管理画面は認証後に表示されるため、認証前の代替画面を登録しています。内容の確認をお願いします'
+            },
+            {
+              stepId: 'n3',
+              label: '会員登録・ログイン画面',
+              screenshotUrl: 'docs/ui-map/web-service-ginleaf/n3-member-login.png',
+              status: 'proposed',
+              capturedAtCommit: 'web-service-ginleaf@dc62833',
+              note: 'ローカルの /members を未ログイン状態で実際に開き、会員登録フォームを撮影。内容の確認をお願いします'
+            },
+            {
+              stepId: 'n4',
+              label: '会員向けコンテンツ画面',
+              screenshotUrl: 'docs/ui-map/web-service-ginleaf/n4-member-content.png',
+              status: 'proposed',
+              capturedAtCommit: 'web-service-ginleaf@dc62833',
+              note: 'ローカルの /members で撮影専用のダミー会員にログインし、お知らせ・会員特典・マイメモが表示される状態を撮影。実データは含まれていません。内容の確認をお願いします'
+            }
+          ],
           eyebrow: 'OVERVIEW / DOCS', title: 'ドキュメント共有状況', description: '公開中のドキュメントと共有設定を確認できます。', filter: '直近7日',
           sources: [
             { name: 'docs/', meta: 'テーマ別知見' }, { name: 'docs-private/', meta: 'アクセス制御あり' },
@@ -1022,7 +1057,42 @@
           nextId: 5
         },
         ui: {
+          currentCommit: 'seikyu_kappo@415cb07',
           initials: 'SK', brand: 'seikyu_kappo', subtitle: '請求書整理', workspace: '経理レビュー', updated: 'Updated 2 min ago',
+          screens: [
+            {
+              stepId: 'n1',
+              label: 'データ取込画面',
+              screenshotUrl: 'docs/ui-map/seikyu_kappo/n1-data-import.png',
+              status: 'proposed',
+              capturedAtCommit: 'seikyu_kappo@415cb07',
+              note: 'README記載のローカル起動方法で空の一時ワークスペースを起動し、撮影用のダミーPDFを選択した取込パネルを撮影。実データは含まれていません。内容の確認をお願いします'
+            },
+            {
+              stepId: 'n2',
+              label: '正規化・突合画面',
+              screenshotUrl: 'docs/ui-map/seikyu_kappo/n2-normalize-match.png',
+              status: 'proposed',
+              capturedAtCommit: 'seikyu_kappo@415cb07',
+              note: '空の一時ワークスペースに架空のデモ取引先1件を読み込み、「取引先」タブの表記ゆれ統合・取引先別集計画面を撮影。銀行照合は同アプリの銀行タブに実装されています。実データは含まれていません。内容の確認をお願いします'
+            },
+            {
+              stepId: 'n3',
+              label: 'レビュー画面',
+              screenshotUrl: 'docs/ui-map/seikyu_kappo/n3-review.png',
+              status: 'proposed',
+              capturedAtCommit: 'seikyu_kappo@415cb07',
+              note: '空の一時ワークスペースにデモ取引先・330円の架空データ1件を用意し、確認対象のレビュー画面を撮影。実データは含まれていません。内容の確認をお願いします'
+            },
+            {
+              stepId: 'n4',
+              label: '集計・出力画面',
+              screenshotUrl: 'docs/ui-map/seikyu_kappo/n4-aggregate-export.png',
+              status: 'proposed',
+              capturedAtCommit: 'seikyu_kappo@415cb07',
+              note: '空の一時ワークスペースに架空の demo-summary.csv を置き、ダッシュボードと生成物一覧が表示される状態を撮影。実データは含まれていません。内容の確認をお願いします'
+            }
+          ],
           eyebrow: 'OVERVIEW / 請求書整理', title: '請求書整理の状況', description: '取込・レビュー・銀行照合の状況を確認できます。', filter: '今月',
           sources: [
             { name: '取引先(vendors)', meta: '' }, { name: '明細記録(records)', meta: '' },
