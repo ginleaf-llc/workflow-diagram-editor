@@ -996,14 +996,14 @@
         workflow: {
           note: 'ドキュメント公開から会員サイト機能までの接点を編集するビュー',
           groups: [
-            { label: 'DOCS & SHARING', left: 20, top: 105, width: 405, height: 390 },
-            { label: 'MEMBER SITE', left: 425, top: 105, width: 425, height: 390 }
+            { label: 'DOCS & SHARING', left: 20, top: 105, width: 460, height: 390 },
+            { label: 'MEMBER SITE', left: 490, top: 105, width: 520, height: 390 }
           ],
           nodes: [
             { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'ドキュメント執筆', description: 'docs/配下にテーマごとの知見を追加' },
-            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'none', title: '共有権限を設定', description: 'Cloudflare Access経由でdocs-privateを社内/社外共有' },
-            { id: 'n3', displayId: 'N03', x: 460, y: 150, kind: 'none', title: '会員登録・ログイン', description: 'D1 + Better Authで認証' },
-            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'none', title: '会員向けコンテンツ提供', description: 'お知らせ・会員特典・プレミアム記事を表示' }
+            { id: 'n2', displayId: 'N02', x: 300, y: 295, kind: 'none', title: '共有権限を設定', description: 'Cloudflare Access経由でdocs-privateを社内/社外共有' },
+            { id: 'n3', displayId: 'N03', x: 525, y: 150, kind: 'none', title: '会員登録・ログイン', description: 'D1 + Better Authで認証' },
+            { id: 'n4', displayId: 'N04', x: 815, y: 295, kind: 'none', title: '会員向けコンテンツ提供', description: 'お知らせ・会員特典・プレミアム記事を表示' }
           ],
           wires: [
             { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n3', to: 'n4' }
@@ -1083,14 +1083,14 @@
         workflow: {
           note: 'データ取込から集計・出力までの接点を編集するビュー',
           groups: [
-            { label: 'INTAKE & NORMALIZE', left: 20, top: 105, width: 405, height: 390 },
-            { label: 'REVIEW & EXPORT', left: 425, top: 105, width: 425, height: 390 }
+            { label: 'INTAKE & NORMALIZE', left: 20, top: 105, width: 460, height: 390 },
+            { label: 'REVIEW & EXPORT', left: 490, top: 105, width: 520, height: 390 }
           ],
           nodes: [
             { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'データ取込', description: '銀行明細・請求書PDFを取込' },
-            { id: 'n2', displayId: 'N02', x: 260, y: 295, kind: 'none', title: '正規化・突合', description: '取引先・金額の整合性を確認' },
-            { id: 'n3', displayId: 'N03', x: 475, y: 150, kind: 'none', title: 'レビュー', description: '担当者が内容を確認・保存' },
-            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'none', title: '集計・出力', description: 'ダッシュボード表示とエクスポート' }
+            { id: 'n2', displayId: 'N02', x: 300, y: 295, kind: 'none', title: '正規化・突合', description: '取引先・金額の整合性を確認' },
+            { id: 'n3', displayId: 'N03', x: 525, y: 150, kind: 'none', title: 'レビュー', description: '担当者が内容を確認・保存' },
+            { id: 'n4', displayId: 'N04', x: 815, y: 295, kind: 'none', title: '集計・出力', description: 'ダッシュボード表示とエクスポート' }
           ],
           wires: [
             { id: 'w1', from: 'n1', to: 'n2' }, { id: 'w2', from: 'n2', to: 'n3' }, { id: 'w3', from: 'n3', to: 'n4' }
