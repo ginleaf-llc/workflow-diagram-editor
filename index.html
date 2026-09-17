@@ -644,14 +644,36 @@
       font: 9px/1.2 "JetBrains Mono", ui-monospace, monospace;
     }
     .ui-screen-summary small { color: var(--muted); }
-    .ui-screen-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
-      gap: 14px;
+    .ui-flow-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
       margin-top: 14px;
+    }
+    .ui-flow-row {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: wrap;
+      row-gap: 20px;
+    }
+    .ui-flow-step {
+      display: flex;
+      align-items: stretch;
+    }
+    .ui-flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      align-self: center;
+      width: 30px;
+      color: var(--teal);
+      font: 800 18px/1 "JetBrains Mono", monospace;
     }
     .ui-screen-card {
       display: flex;
+      flex: 0 0 245px;
+      width: 245px;
       min-width: 0;
       flex-direction: column;
       overflow: hidden;
@@ -795,7 +817,9 @@
       .bar .tools { display: none; }
       .other { width: calc(100% - 28px); padding: 20px; }
       .ui-screen-summary { align-items: flex-start; flex-direction: column; }
-      .ui-screen-grid { grid-template-columns: 1fr; }
+      .ui-flow-step { flex-direction: column; flex-basis: 100%; }
+      .ui-screen-card { flex-basis: 100%; width: 100%; }
+      .ui-flow-arrow { width: auto; height: 24px; transform: rotate(90deg); }
       .workflow-editor { left: 875px; }
     }
 
@@ -1563,20 +1587,63 @@
       return '<div class="ui-screen-commit ' + (isCurrent ? 'is-current' : 'is-stale') + '">' + capturedMarkup + revisionMarkup + '</div>';
     }
 
+    function computeUiFlowChains(screens) {
+      const workflowData = hasAppData(app) ? APP_DATA[app].workflow : null;
+      const screenIds = screens.map(screen => screen.stepId);
+      const screenSet = new Set(screenIds);
+      const byId = Object.fromEntries(screens.map(screen => [screen.stepId, screen]));
+      const wires = (workflowData && Array.isArray(workflowData.wires)) ? workflowData.wires : [];
+      const outMap = {};
+      const inDegree = {};
+      screenIds.forEach(id => { outMap[id] = []; inDegree[id] = 0; });
+      wires.forEach(wire => {
+        if (!screenSet.has(wire.from) || !screenSet.has(wire.to)) return;
+        outMap[wire.from].push(wire.to);
+        inDegree[wire.to] += 1;
+      });
+      const visited = new Set();
+      const chains = [];
+      screenIds.forEach(id => {
+        if (visited.has(id) || inDegree[id] > 0) return;
+        const chain = [];
+        let current = id;
+        while (current && !visited.has(current)) {
+          chain.push(current);
+          visited.add(current);
+          current = outMap[current] && outMap[current][0];
+        }
+        chains.push(chain);
+      });
+      screenIds.forEach(id => {
+        if (!visited.has(id)) { chains.push([id]); visited.add(id); }
+      });
+      return chains.map(chain => chain.map(id => byId[id]).filter(Boolean)).filter(chain => chain.length > 0);
+    }
+
+    function uiScreenCardMarkup(screen, currentCommit) {
+      const status = screenStatus(screen);
+      const screenshotUrl = String(screen.screenshotUrl || '').trim();
+      const thumbnail = screenshotUrl
+        ? '<img src="' + escapeHtml(screenshotUrl) + '" alt="' + escapeHtml(screen.label) + 'のスクリーンショット">'
+        : '<div class="ui-screen-placeholder"><strong>未撮影</strong><small>スクリーンショットはまだ登録されていません</small></div>';
+      return '<article class="ui-screen-card" data-step-id="' + escapeHtml(screen.stepId) + '"><header class="ui-screen-card-header"><div><span class="ui-screen-step">STEP ' + escapeHtml(screen.stepId) + '</span><h3>' + escapeHtml(screen.label) + '</h3></div><span class="ui-screen-status ' + status + '" aria-label="状態: ' + status + '">' + status + '</span></header><div class="ui-screen-thumbnail" aria-label="' + escapeHtml(screen.label) + 'のサムネイル">' + thumbnail + '</div><div class="ui-screen-meta">' + screenCommitMarkup(screen, currentCommit) + '<p class="ui-screen-note">' + escapeHtml(screen.note || '') + '</p></div></article>';
+    }
+
     function buildUiMarkup(data) {
       const currentCommit = String(data.currentCommit || '').trim();
       const currentCommitMarkup = currentCommit
         ? '<code>' + escapeHtml(currentCommit) + '</code>'
         : '<span>未登録</span>';
-      const screens = data.screens.map(screen => {
-        const status = screenStatus(screen);
-        const screenshotUrl = String(screen.screenshotUrl || '').trim();
-        const thumbnail = screenshotUrl
-          ? '<img src="' + escapeHtml(screenshotUrl) + '" alt="' + escapeHtml(screen.label) + 'のスクリーンショット">'
-          : '<div class="ui-screen-placeholder"><strong>未撮影</strong><small>スクリーンショットはまだ登録されていません</small></div>';
-        return '<article class="ui-screen-card" data-step-id="' + escapeHtml(screen.stepId) + '"><header class="ui-screen-card-header"><div><span class="ui-screen-step">STEP ' + escapeHtml(screen.stepId) + '</span><h3>' + escapeHtml(screen.label) + '</h3></div><span class="ui-screen-status ' + status + '" aria-label="状態: ' + status + '">' + status + '</span></header><div class="ui-screen-thumbnail" aria-label="' + escapeHtml(screen.label) + 'のサムネイル">' + thumbnail + '</div><div class="ui-screen-meta">' + screenCommitMarkup(screen, currentCommit) + '<p class="ui-screen-note">' + escapeHtml(screen.note || '') + '</p></div></article>';
+      const chains = computeUiFlowChains(data.screens);
+      const rows = chains.map(chain => {
+        const steps = chain.map((screen, index) => {
+          const card = uiScreenCardMarkup(screen, currentCommit);
+          const arrow = index === 0 ? '' : '<div class="ui-flow-arrow" aria-hidden="true">→</div>';
+          return '<div class="ui-flow-step">' + arrow + card + '</div>';
+        }).join('');
+        return '<div class="ui-flow-row">' + steps + '</div>';
       }).join('');
-      return '<div class="ui-screen-viewer" aria-label="' + escapeHtml(app) + 'のスクリーンショット対応表"><div class="ui-screen-summary"><div><strong>SCREENSHOT MAPPING</strong><small> ワークフローステップに対応する画面</small></div><div><strong>現在のcommit</strong> ' + currentCommitMarkup + '</div></div><div class="ui-screen-grid">' + screens + '</div></div>';
+      return '<div class="ui-screen-viewer" aria-label="' + escapeHtml(app) + 'のスクリーンショット対応表"><div class="ui-screen-summary"><div><strong>SCREENSHOT MAPPING</strong><small> データがどの画面をどの順に流れるかを確認するビュー</small></div><div><strong>現在のcommit</strong> ' + currentCommitMarkup + '</div></div><div class="ui-flow-rows">' + rows + '</div></div>';
     }
 
     function renderUiView() {
