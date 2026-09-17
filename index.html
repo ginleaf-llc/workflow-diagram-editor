@@ -570,6 +570,16 @@
     .chat { --accent: var(--chat); --soft: var(--chat-soft); }
     .future { --accent: var(--amber); --soft: var(--amber-soft); border-style: dashed; }
     .none { --accent: var(--neutral); --soft: var(--neutral-soft); }
+    /* AI呼び出し段階は形そのものを変える: 角を斜めに切り、バッジをダイヤ形にする */
+    .chat.node, .agent.node,
+    .chat.ui-screen-card, .agent.ui-screen-card {
+      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+    }
+    .chat span::before, .agent span::before,
+    .chat .ui-screen-kind::before, .agent .ui-screen-kind::before {
+      border-radius: 2px;
+      transform: rotate(45deg);
+    }
     .flow-board > svg { position: absolute; inset: 0; }
     .wire { fill: none; stroke: var(--line); stroke-width: 2; marker-end: url(#a); }
 
@@ -922,17 +932,17 @@
           note: 'ソース選択からAI分析・作成物保存までの接点を編集するビュー',
           groups: [
             { label: 'SOURCE & CONFIG', left: 20, top: 105, width: 460, height: 390 },
-            { label: 'AI ANALYSIS PIPELINE（1段だけがAI呼び出し）', left: 490, top: 105, width: 520, height: 620 }
+            { label: 'AI ANALYSIS PIPELINE', left: 490, top: 105, width: 520, height: 620 }
           ],
           nodes: [
             { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'ソース選択', description: '使うCSV/JSON/Mdを選ぶ・ON/OFF' },
             { id: 'n2', displayId: 'N02', x: 300, y: 295, kind: 'none', title: '設定保存', description: '列の役割・指示・しきい値を保存' },
-            { id: 'n7', displayId: 'N03', x: 525, y: 140, kind: 'none', title: '① 計画', description: '入力内容と保存条件を確認（プログラム）' },
-            { id: 'n8', displayId: 'N04', x: 815, y: 235, kind: 'none', title: '② ソース読み込み', description: '選択中のソースを分析対象として準備（プログラム）' },
-            { id: 'n3', displayId: 'N05', x: 525, y: 330, kind: 'chat', title: '③ 分析', description: '選択モデルへ分析を依頼 — ここだけがAIモデルを呼ぶ段階' },
-            { id: 'n9', displayId: 'N06', x: 815, y: 425, kind: 'none', title: '④ 検証', description: '応答の形式・根拠・入力リビジョンを確認（プログラム、fail-closed）' },
-            { id: 'n10', displayId: 'N07', x: 525, y: 520, kind: 'none', title: '⑤ 保存', description: '確認済みの結果を作成物へ保存（プログラム）' },
-            { id: 'n4', displayId: 'N08', x: 815, y: 615, kind: 'none', title: '作成物保存', description: '生成結果を一覧に残す（プログラム）' },
+            { id: 'n7', displayId: 'N03', x: 525, y: 140, kind: 'none', title: '① 計画', description: '入力内容と保存条件を確認' },
+            { id: 'n8', displayId: 'N04', x: 815, y: 235, kind: 'none', title: '② ソース読み込み', description: '選択中のソースを分析対象として準備' },
+            { id: 'n3', displayId: 'N05', x: 525, y: 330, kind: 'chat', title: '③ 分析', description: '選択モデルへ分析を依頼' },
+            { id: 'n9', displayId: 'N06', x: 815, y: 425, kind: 'none', title: '④ 検証', description: '応答の形式・根拠・入力リビジョンを確認' },
+            { id: 'n10', displayId: 'N07', x: 525, y: 520, kind: 'none', title: '⑤ 保存', description: '確認済みの結果を作成物へ保存' },
+            { id: 'n4', displayId: 'N08', x: 815, y: 615, kind: 'none', title: '作成物保存', description: '生成結果を一覧に残す' },
             { id: 'n5', displayId: 'N09', x: 150, y: 770, kind: 'chat', title: '質問', description: '選んだソースについて聞く' },
             { id: 'n6', displayId: 'N10', x: 460, y: 770, kind: 'chat', title: 'ソース提案', description: '指示に合うソースをAIが提案' }
           ],
@@ -982,7 +992,7 @@
               screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
               status: 'proposed',
               capturedAtCommit: 'aikensyu@6b6d166',
-              note: '同上。AI分析画面の内部処理段階（プログラム）'
+              note: '同上。AI分析画面の内部処理段階'
             },
             {
               stepId: 'n3',
@@ -990,7 +1000,7 @@
               screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
               status: 'proposed',
               capturedAtCommit: 'aikensyu@6b6d166',
-              note: 'ローカルのdemo/webappを実際に起動して撮影。5段のうちここだけが実際にAIモデルを呼び出す'
+              note: 'ローカルのdemo/webappを実際に起動して撮影。内容の確認をお願いします'
             },
             {
               stepId: 'n9',
@@ -998,7 +1008,7 @@
               screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
               status: 'proposed',
               capturedAtCommit: 'aikensyu@6b6d166',
-              note: '同上。AI分析画面の内部処理段階（プログラム、fail-closed）'
+              note: '同上。AI分析画面の内部処理段階'
             },
             {
               stepId: 'n10',
@@ -1006,7 +1016,7 @@
               screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
               status: 'proposed',
               capturedAtCommit: 'aikensyu@6b6d166',
-              note: '同上。AI分析画面の内部処理段階（プログラム）'
+              note: '同上。AI分析画面の内部処理段階'
             },
             {
               stepId: 'n4',
@@ -1387,12 +1397,12 @@
       node.dataset.node = nodeData.title;
       node.style.left = nodeData.x + 'px';
       node.style.top = nodeData.y + 'px';
-      node.innerHTML = '<div class="node-actions"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><small class="node-id" aria-hidden="true"></small><h3></h3><p></p><span></span>';
+      node.innerHTML = '<div class="node-actions"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><small class="node-id" aria-hidden="true"></small><h3></h3><p></p><span class="node-kind-badge"></span>';
       node.querySelector('.node-actions').setAttribute('aria-label', nodeData.title + 'の操作');
       node.querySelector('.node-id').textContent = nodeData.displayId;
       node.querySelector('h3').textContent = nodeData.title;
       node.querySelector('p').textContent = nodeData.description;
-      node.querySelector('span').textContent = TYPE_SHORT_LABELS[nodeData.kind];
+      node.querySelector('.node-kind-badge').setAttribute('aria-label', TYPE_SHORT_LABELS[nodeData.kind]);
       if (selectedNodeId === nodeData.id) node.classList.add('selected');
       bindWorkflowNode(node, nodeData);
       return node;
@@ -1651,7 +1661,7 @@
       const thumbnail = screenshotUrl
         ? '<img src="' + escapeHtml(screenshotUrl) + '" alt="' + escapeHtml(screen.label) + 'のスクリーンショット">'
         : '<div class="ui-screen-placeholder"><strong>未撮影</strong><small>スクリーンショットはまだ登録されていません</small></div>';
-      return '<article class="ui-screen-card ' + escapeHtml(kind) + '" data-step-id="' + escapeHtml(screen.stepId) + '"><header class="ui-screen-card-header"><div><span class="ui-screen-step">STEP ' + escapeHtml(screen.stepId) + '</span><h3>' + escapeHtml(screen.label) + '</h3><span class="ui-screen-kind">' + escapeHtml(kindLabel) + '</span></div><span class="ui-screen-status ' + status + '" aria-label="状態: ' + status + '">' + status + '</span></header><div class="ui-screen-thumbnail" aria-label="' + escapeHtml(screen.label) + 'のサムネイル">' + thumbnail + '</div><div class="ui-screen-meta">' + screenCommitMarkup(screen, currentCommit) + '<p class="ui-screen-note">' + escapeHtml(screen.note || '') + '</p></div></article>';
+      return '<article class="ui-screen-card ' + escapeHtml(kind) + '" data-step-id="' + escapeHtml(screen.stepId) + '"><header class="ui-screen-card-header"><div><span class="ui-screen-step">STEP ' + escapeHtml(screen.stepId) + '</span><h3>' + escapeHtml(screen.label) + '</h3><span class="ui-screen-kind" aria-label="' + escapeHtml(kindLabel) + '"></span></div><span class="ui-screen-status ' + status + '" aria-label="状態: ' + status + '">' + status + '</span></header><div class="ui-screen-thumbnail" aria-label="' + escapeHtml(screen.label) + 'のサムネイル">' + thumbnail + '</div><div class="ui-screen-meta">' + screenCommitMarkup(screen, currentCommit) + '<p class="ui-screen-note">' + escapeHtml(screen.note || '') + '</p></div></article>';
     }
 
     function buildUiMarkup(data) {
