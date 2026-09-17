@@ -679,8 +679,25 @@
       overflow: hidden;
       background: var(--card);
       border: 1px solid var(--border);
+      border-left: 3px solid var(--accent, var(--border));
       border-radius: 4px;
       box-shadow: var(--shadow);
+    }
+    .ui-screen-kind {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      color: var(--accent, var(--muted));
+      font: 800 9px/1 "JetBrains Mono", ui-monospace, monospace;
+      letter-spacing: .02em;
+    }
+    .ui-screen-kind::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      flex: 0 0 auto;
+      background: var(--accent, var(--muted));
     }
     .ui-screen-card-header {
       display: flex;
@@ -1620,13 +1637,21 @@
       return chains.map(chain => chain.map(id => byId[id]).filter(Boolean)).filter(chain => chain.length > 0);
     }
 
+    function uiScreenNodeKind(stepId) {
+      const workflowData = hasAppData(app) ? APP_DATA[app].workflow : null;
+      const node = workflowData && Array.isArray(workflowData.nodes) ? workflowData.nodes.find(n => n.id === stepId) : null;
+      return node && KINDS.includes(node.kind) ? node.kind : 'none';
+    }
+
     function uiScreenCardMarkup(screen, currentCommit) {
       const status = screenStatus(screen);
+      const kind = uiScreenNodeKind(screen.stepId);
+      const kindLabel = TYPE_SHORT_LABELS[kind] || TYPE_SHORT_LABELS.none;
       const screenshotUrl = String(screen.screenshotUrl || '').trim();
       const thumbnail = screenshotUrl
         ? '<img src="' + escapeHtml(screenshotUrl) + '" alt="' + escapeHtml(screen.label) + 'のスクリーンショット">'
         : '<div class="ui-screen-placeholder"><strong>未撮影</strong><small>スクリーンショットはまだ登録されていません</small></div>';
-      return '<article class="ui-screen-card" data-step-id="' + escapeHtml(screen.stepId) + '"><header class="ui-screen-card-header"><div><span class="ui-screen-step">STEP ' + escapeHtml(screen.stepId) + '</span><h3>' + escapeHtml(screen.label) + '</h3></div><span class="ui-screen-status ' + status + '" aria-label="状態: ' + status + '">' + status + '</span></header><div class="ui-screen-thumbnail" aria-label="' + escapeHtml(screen.label) + 'のサムネイル">' + thumbnail + '</div><div class="ui-screen-meta">' + screenCommitMarkup(screen, currentCommit) + '<p class="ui-screen-note">' + escapeHtml(screen.note || '') + '</p></div></article>';
+      return '<article class="ui-screen-card ' + escapeHtml(kind) + '" data-step-id="' + escapeHtml(screen.stepId) + '"><header class="ui-screen-card-header"><div><span class="ui-screen-step">STEP ' + escapeHtml(screen.stepId) + '</span><h3>' + escapeHtml(screen.label) + '</h3><span class="ui-screen-kind">' + escapeHtml(kindLabel) + '</span></div><span class="ui-screen-status ' + status + '" aria-label="状態: ' + status + '">' + status + '</span></header><div class="ui-screen-thumbnail" aria-label="' + escapeHtml(screen.label) + 'のサムネイル">' + thumbnail + '</div><div class="ui-screen-meta">' + screenCommitMarkup(screen, currentCommit) + '<p class="ui-screen-note">' + escapeHtml(screen.note || '') + '</p></div></article>';
     }
 
     function buildUiMarkup(data) {
