@@ -928,12 +928,44 @@
               note: 'Playwrightで「設定」ボタンを実際にクリックして撮影。内容の確認をお願いします'
             },
             {
-              stepId: 'n3',
-              label: 'AI分析画面',
+              stepId: 'n7',
+              label: '① 計画（AI分析画面）',
               screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
               status: 'proposed',
               capturedAtCommit: 'aikensyu@6b6d166',
-              note: 'ローカルのdemo/webappを実際に起動して撮影。内容の確認をお願いします'
+              note: 'ワークフロー上は5段に分かれているが、画面としては1つの「AI分析画面」の中で①〜⑤が内部処理として進む（別画面には遷移しない）'
+            },
+            {
+              stepId: 'n8',
+              label: '② ソース読み込み（AI分析画面）',
+              screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
+              status: 'proposed',
+              capturedAtCommit: 'aikensyu@6b6d166',
+              note: '同上。AI分析画面の内部処理段階（プログラム）'
+            },
+            {
+              stepId: 'n3',
+              label: '③ 分析（AI分析画面）',
+              screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
+              status: 'proposed',
+              capturedAtCommit: 'aikensyu@6b6d166',
+              note: 'ローカルのdemo/webappを実際に起動して撮影。5段のうちここだけが実際にAIモデルを呼び出す'
+            },
+            {
+              stepId: 'n9',
+              label: '④ 検証（AI分析画面）',
+              screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
+              status: 'proposed',
+              capturedAtCommit: 'aikensyu@6b6d166',
+              note: '同上。AI分析画面の内部処理段階（プログラム、fail-closed）'
+            },
+            {
+              stepId: 'n10',
+              label: '⑤ 保存（AI分析画面）',
+              screenshotUrl: 'docs/ui-map/aikensyu/n3-ai-analysis.png',
+              status: 'proposed',
+              capturedAtCommit: 'aikensyu@6b6d166',
+              note: '同上。AI分析画面の内部処理段階（プログラム）'
             },
             {
               stepId: 'n4',
