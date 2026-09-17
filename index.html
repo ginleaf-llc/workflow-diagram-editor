@@ -243,11 +243,11 @@
       from { opacity: 1; transform: translateY(0); }
       to { opacity: 0; transform: translateY(-8px); }
     }
-    .board { position: relative; width: 1230px; min-height: 700px; padding: 24px 30px; }
+    .board { position: relative; width: 1230px; min-height: 950px; padding: 24px 30px; }
     .workflow-canvas {
       position: relative;
-      width: 860px;
-      height: 620px;
+      width: 1050px;
+      height: 900px;
       border: 1px solid transparent;
       border-radius: 4px;
       transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
@@ -521,6 +521,7 @@
       width: 186px;
       background: var(--card);
       border: 1px solid var(--border);
+      border-left: 3px solid var(--accent, var(--border));
       border-radius: 4px;
       padding: 12px 13px 12px;
       box-shadow: var(--shadow);
@@ -834,7 +835,7 @@
             <div class="workflow-mode" id="workflowMode">編集モード</div>
             <button class="add-node" id="addNode" type="button">ノードを追加</button>
             <div id="workflowGroups"></div>
-            <svg id="workflowWires" width="860" height="620" viewBox="0 0 860 620" aria-hidden="true"></svg>
+            <svg id="workflowWires" width="1050" height="900" viewBox="0 0 1050 900" aria-hidden="true"></svg>
             <div id="workflowNodes"></div>
           </div>
           <aside class="workflow-editor" id="nodeEditor" aria-label="ノード編集パネル" aria-hidden="true">
@@ -879,25 +880,33 @@
         workflow: {
           note: 'ソース選択からAI分析・作成物保存までの接点を編集するビュー',
           groups: [
-            { label: 'SOURCE & CONFIG', left: 20, top: 105, width: 405, height: 390 },
-            { label: 'AI ANALYSIS & OUTPUT', left: 425, top: 105, width: 425, height: 390 }
+            { label: 'SOURCE & CONFIG', left: 20, top: 105, width: 460, height: 390 },
+            { label: 'AI ANALYSIS PIPELINE（1段だけがAI呼び出し）', left: 490, top: 105, width: 520, height: 620 }
           ],
           nodes: [
             { id: 'n1', displayId: 'N01', x: 55, y: 150, kind: 'none', title: 'ソース選択', description: '使うCSV/JSON/Mdを選ぶ・ON/OFF' },
-            { id: 'n2', displayId: 'N02', x: 250, y: 295, kind: 'none', title: '設定保存', description: '列の役割・指示・しきい値を保存' },
-            { id: 'n3', displayId: 'N03', x: 460, y: 150, kind: 'chat', title: 'AI分析', description: '事実から要点を文章化' },
-            { id: 'n4', displayId: 'N04', x: 680, y: 295, kind: 'none', title: '作成物保存', description: '生成結果を保存・一覧に残す' },
-            { id: 'n5', displayId: 'N05', x: 150, y: 520, kind: 'chat', title: '質問', description: '選んだソースについて聞く' },
-            { id: 'n6', displayId: 'N06', x: 460, y: 520, kind: 'chat', title: 'ソース提案', description: '指示に合うソースをAIが提案' }
+            { id: 'n2', displayId: 'N02', x: 300, y: 295, kind: 'none', title: '設定保存', description: '列の役割・指示・しきい値を保存' },
+            { id: 'n7', displayId: 'N03', x: 525, y: 140, kind: 'none', title: '① 計画', description: '入力内容と保存条件を確認（プログラム）' },
+            { id: 'n8', displayId: 'N04', x: 815, y: 235, kind: 'none', title: '② ソース読み込み', description: '選択中のソースを分析対象として準備（プログラム）' },
+            { id: 'n3', displayId: 'N05', x: 525, y: 330, kind: 'chat', title: '③ 分析', description: '選択モデルへ分析を依頼 — ここだけがAIモデルを呼ぶ段階' },
+            { id: 'n9', displayId: 'N06', x: 815, y: 425, kind: 'none', title: '④ 検証', description: '応答の形式・根拠・入力リビジョンを確認（プログラム、fail-closed）' },
+            { id: 'n10', displayId: 'N07', x: 525, y: 520, kind: 'none', title: '⑤ 保存', description: '確認済みの結果を作成物へ保存（プログラム）' },
+            { id: 'n4', displayId: 'N08', x: 815, y: 615, kind: 'none', title: '作成物保存', description: '生成結果を一覧に残す（プログラム）' },
+            { id: 'n5', displayId: 'N09', x: 150, y: 770, kind: 'chat', title: '質問', description: '選んだソースについて聞く' },
+            { id: 'n6', displayId: 'N10', x: 460, y: 770, kind: 'chat', title: 'ソース提案', description: '指示に合うソースをAIが提案' }
           ],
           wires: [
             { id: 'w1', from: 'n1', to: 'n2' },
-            { id: 'w2', from: 'n2', to: 'n3' },
-            { id: 'w3', from: 'n3', to: 'n4' },
+            { id: 'w2', from: 'n2', to: 'n7' },
+            { id: 'w6', from: 'n7', to: 'n8' },
+            { id: 'w7', from: 'n8', to: 'n3' },
+            { id: 'w8', from: 'n3', to: 'n9' },
+            { id: 'w9', from: 'n9', to: 'n10' },
+            { id: 'w3', from: 'n10', to: 'n4' },
             { id: 'w4', from: 'n1', to: 'n5' },
             { id: 'w5', from: 'n1', to: 'n6' }
           ],
-          nextId: 7
+          nextId: 11
         },
         ui: {
           currentCommit: 'aikensyu@6b6d166',
