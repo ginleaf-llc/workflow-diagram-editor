@@ -570,10 +570,38 @@
     .chat { --accent: var(--chat); --soft: var(--chat-soft); }
     .future { --accent: var(--amber); --soft: var(--amber-soft); border-style: dashed; }
     .none { --accent: var(--neutral); --soft: var(--neutral-soft); }
-    /* AI呼び出し段階は形そのものを変える: 角を斜めに切り、バッジをダイヤ形にする */
+    /* AI呼び出し段階は形そのものを変える: 塗り+太枠+角の三角バッジで別物として見せる */
     .chat.node, .agent.node,
     .chat.ui-screen-card, .agent.ui-screen-card {
-      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+      position: relative;
+      background: var(--soft);
+      border: 2px solid var(--accent);
+      border-left: 2px solid var(--accent);
+    }
+    .chat.node::before, .agent.node::before,
+    .chat.ui-screen-card::before, .agent.ui-screen-card::before {
+      content: "";
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 32px 32px 0;
+      border-color: transparent var(--accent) transparent transparent;
+      pointer-events: none;
+    }
+    .chat.node::after, .agent.node::after,
+    .chat.ui-screen-card::after, .agent.ui-screen-card::after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 9px;
+      height: 9px;
+      background: #fff;
+      clip-path: polygon(50% 0%, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0% 50%, 37% 37%);
+      pointer-events: none;
     }
     .chat span::before, .agent span::before,
     .chat .ui-screen-kind::before, .agent .ui-screen-kind::before {
