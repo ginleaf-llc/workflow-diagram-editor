@@ -570,41 +570,49 @@
     .chat { --accent: var(--chat); --soft: var(--chat-soft); }
     .future { --accent: var(--amber); --soft: var(--amber-soft); border-style: dashed; }
     .none { --accent: var(--neutral); --soft: var(--neutral-soft); }
-    /* AI呼び出し段階は形そのものを変える: 塗り+太枠+角の三角バッジで別物として見せる */
-    .chat.node, .agent.node,
+    /* AI呼び出し段階は形そのものを変える: 本体を塗りつぶしAI/プログラムを一目で分ける */
+    .chat.node, .agent.node {
+      position: relative;
+      background: var(--accent);
+      border: 2px solid var(--accent);
+    }
+    .chat.node .node-id, .agent.node .node-id { color: rgba(255,255,255,.65); }
+    .chat.node h3, .agent.node h3 { color: #fff; }
+    .chat.node p, .agent.node p { color: rgba(255,255,255,.85); }
     .chat.ui-screen-card, .agent.ui-screen-card {
       position: relative;
-      background: var(--soft);
       border: 2px solid var(--accent);
-      border-left: 2px solid var(--accent);
     }
-    .chat.node::before, .agent.node::before,
-    .chat.ui-screen-card::before, .agent.ui-screen-card::before {
-      content: "";
-      position: absolute;
-      top: -2px;
-      right: -2px;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 0 32px 32px 0;
-      border-color: transparent var(--accent) transparent transparent;
-      pointer-events: none;
+    .chat.ui-screen-card .ui-screen-card-header,
+    .agent.ui-screen-card .ui-screen-card-header {
+      background: var(--accent);
     }
+    .chat.ui-screen-card .ui-screen-step, .agent.ui-screen-card .ui-screen-step { color: rgba(255,255,255,.65); }
+    .chat.ui-screen-card h3, .agent.ui-screen-card h3 { color: #fff; }
     .chat.node::after, .agent.node::after,
-    .chat.ui-screen-card::after, .agent.ui-screen-card::after {
+    .chat.ui-screen-card .ui-screen-card-header::after,
+    .agent.ui-screen-card .ui-screen-card-header::after {
       content: "";
       position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 9px;
-      height: 9px;
+      top: 8px;
+      right: 8px;
+      width: 11px;
+      height: 11px;
       background: #fff;
       clip-path: polygon(50% 0%, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0% 50%, 37% 37%);
       pointer-events: none;
     }
-    .chat span::before, .agent span::before,
+    .chat.ui-screen-card .ui-screen-card-header,
+    .agent.ui-screen-card .ui-screen-card-header {
+      position: relative;
+    }
+    .chat span::before, .agent span::before {
+      background: #fff;
+      border-radius: 2px;
+      transform: rotate(45deg);
+    }
     .chat .ui-screen-kind::before, .agent .ui-screen-kind::before {
+      background: #fff;
       border-radius: 2px;
       transform: rotate(45deg);
     }
