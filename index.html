@@ -631,6 +631,45 @@
     .other h2 { margin: 0 0 6px; }
     .other > p { color: var(--muted); }
     .hidden { display: none; }
+    .workflow-json-tools { position: absolute; z-index: 4; top: 80px; left: 30px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .workflow-json-tools button, .workflow-json-tools select, .dialog-actions button {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); color: var(--ink); cursor: pointer;
+    }
+    .workflow-json-tools button:disabled { opacity: .5; cursor: not-allowed; }
+    #jsonMessage { color: var(--teal); }
+    .role-legend { position: absolute; z-index: 4; top: 120px; left: 30px; display: flex; flex-wrap: wrap; gap: 18px; }
+    .role-legend[hidden], #workflowVariantLabel[hidden] { display: none; }
+    .role-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .role-legend i { width: 12px; height: 12px; background: var(--role-color); }
+    .role-calculator { --role-color: #2563a8; --role-soft: #eaf2ff; }
+    .role-sorter { --role-color: #23754e; --role-soft: #e9f7ef; }
+    .role-judge { --role-color: #b96513; --role-soft: #fff2df; }
+    .role-human { --role-color: #b4313b; --role-soft: #fff0f1; }
+    .workflow-canvas .role-node { position: absolute; width: 240px; min-height: 145px; border: 2px solid var(--role-color); background: var(--role-soft); cursor: pointer; }
+    .workflow-canvas .role-node:not(.chat):not(.agent) { --accent: var(--role-color); --soft: var(--role-soft); }
+    .workflow-canvas .role-node.chat, .workflow-canvas .role-node.agent { background: var(--accent); }
+    .workflow-canvas .role-node.is-planned { border-style: dashed; }
+    .workflow-canvas .role-node p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .workflow-canvas .role-node h3 { padding-right: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .workflow-canvas .role-node .role-badge { color: var(--role-color); }
+    .workflow-canvas .role-node.chat .role-badge, .workflow-canvas .role-node.agent .role-badge { color: white; }
+    .workflow-canvas .role-node .role-badge::before { background: var(--role-color); }
+    .role-sorter i, .role-sorter .role-badge::before { border-radius: 50%; }
+    .role-judge i, .role-judge .role-badge::before { transform: rotate(45deg); }
+    .role-human i, .role-human .role-badge::before { border-radius: 6px 6px 0 0; }
+    .workflow-canvas .role-node.none .node-kind-badge { display: none; }
+    .workflow-canvas .wire.is-return { stroke-dasharray: 7 4; }
+    .json-dialog { width: min(720px, 90vw); max-height: 85vh; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 24px; color: var(--ink); }
+    .json-dialog::backdrop { background: #14181c88; }
+    .json-dialog h2 { margin-top: 0; font-size: 18px; }
+    .json-dialog label { display: block; margin: 14px 0 6px; font-weight: 700; }
+    .json-dialog textarea { width: 100%; resize: vertical; padding: 10px; }
+    .json-dialog pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--canvas); padding: 12px; }
+    #jsonImportError { color: #b4313b; }
+    .dialog-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+    #confirmJsonImport { background: var(--teal); color: white; }
+    #nodeDetailsContent { overflow-wrap: anywhere; }
+    .board.normalized .workflow-editor { top: 100px; left: var(--editor-left); }
 
     .empty-state {
       display: grid;
@@ -912,11 +951,18 @@
         <button class="tab" data-view="ui">アプリのUI</button>
         <button class="tab" data-view="data">データフロー</button>
         <button class="tab active" data-view="workflow">ワークフロー</button>
-        <div class="tools"><button>共有</button><button class="primary" id="editToggle" aria-pressed="false">編集する</button><button id="resetWorkflow" type="button">リセット</button></div>
+        <div class="tools"><span id="workflowJsonActions"><button id="importWorkflow" type="button">JSON取込</button> <button id="exportWorkflow" type="button" disabled>JSON書き出し</button></span><button>共有</button><button class="primary" id="editToggle" aria-pressed="false">編集する</button><button id="resetWorkflow" type="button">リセット</button></div>
       </nav>
 
         <main class="stage">
         <section id="workflow" class="view board">
+          <div class="workflow-json-tools">
+            <label id="workflowVariantLabel" hidden>請求書整理の表示 <select id="workflowVariant"><option value="simple">簡易版（4ノード）</option><option value="detailed">詳細版（担当種別付き）</option></select></label>
+            <span id="jsonMessage" role="status" aria-live="polite"></span>
+          </div>
+          <div id="roleLegend" class="role-legend" aria-label="担当種別の凡例" hidden>
+            <span class="role-calculator"><i></i>電卓（青）</span><span class="role-sorter"><i></i>仕分け（緑）</span><span class="role-judge"><i></i>判断（橙）</span><span class="role-human"><i></i>人（赤）</span><span>点線枠：計画中</span>
+          </div>
           <div class="workflow-canvas" id="workflowCanvas">
             <div class="note"><b id="noteTitle">aikensyu のワークフロー</b><small id="noteDescription">業務とAI機能の接点を編集するビュー</small></div>
             <div class="workflow-mode" id="workflowMode">編集モード</div>
@@ -931,6 +977,10 @@
               <div class="editor-field"><label for="nodeTitle">タイトル</label><input id="nodeTitle" type="text"></div>
               <div class="editor-field"><label for="nodeDescription">説明</label><textarea id="nodeDescription"></textarea></div>
               <div class="editor-field"><label for="nodeType">種別</label><select id="nodeType"><option value="agent">AIエージェント</option><option value="chat">AIチャット</option><option value="none">AI不使用</option><option value="future">構想未実装</option></select></div>
+              <div id="normalizedNodeFields" hidden>
+                <div class="editor-field"><label for="nodeRole">担当種別</label><select id="nodeRole"><option value="calculator">電卓</option><option value="sorter">仕分け</option><option value="judge">判断</option><option value="human">人</option></select></div>
+                <div class="editor-field"><label for="nodeStatus">実装状態</label><select id="nodeStatus"><option value="implemented">実装済み</option><option value="planned">計画中</option></select></div>
+              </div>
               <div class="editor-actions"><button id="cancelNode" type="button">キャンセル</button><button class="save" id="saveNode" type="submit">変更を保存</button></div>
             </form>
             <p class="editor-hint">ノードを選択して、役割と説明を調整できます。配線は既存のフローを保ったまま確認できます。</p>
@@ -952,6 +1002,22 @@
     </div>
   </div>
 
+  <dialog id="jsonImportDialog" class="json-dialog" aria-labelledby="jsonImportTitle">
+    <form id="jsonImportForm">
+      <h2 id="jsonImportTitle">ワークフローJSONを取り込む</h2>
+      <p>検証に成功すると、選択中のアプリのワークフローを置き換えます。元の全項目と接続条件を保持します。</p>
+      <label for="jsonFile">JSONファイル（1MB以内）</label><input id="jsonFile" type="file" accept=".json,application/json">
+      <label for="jsonText">またはJSONを貼り付け</label><textarea id="jsonText" rows="12" spellcheck="false" placeholder='{"version":1,"name":"…","title":"…","nodes":[],"connections":[]}'></textarea>
+      <p id="jsonImportError" role="alert"></p>
+      <div class="dialog-actions"><button id="cancelJsonImport" type="button">キャンセル</button><button id="confirmJsonImport" type="submit">取り込む</button></div>
+    </form>
+  </dialog>
+  <dialog id="nodeDetailsDialog" class="json-dialog" aria-labelledby="nodeDetailsTitle">
+    <h2 id="nodeDetailsTitle"></h2><div id="nodeDetailsContent"></div>
+    <form method="dialog" class="dialog-actions"><button>閉じる</button></form>
+  </dialog>
+  <script src="workflow-json.js"></script>
+  <script src="workflow/seikyu-kappo.js"></script>
   <script>
     const KINDS = ['agent', 'chat', 'none', 'future'];
     const TYPE_SHORT_LABELS = {
@@ -961,6 +1027,10 @@
       future: '[TBD]'
     };
     const WORKFLOW_STORAGE_PREFIX = 'workflow-editor:';
+    let seikyuVariant = 'simple';
+    try {
+      if (localStorage.getItem(WORKFLOW_STORAGE_PREFIX + 'seikyu_kappo:variant') === 'detailed') seikyuVariant = 'detailed';
+    } catch (error) {}
 
     const APP_DATA = {
       aikensyu: {
@@ -1304,10 +1374,11 @@
     }
 
     function workflowStorageKey(appName) {
-      return WORKFLOW_STORAGE_PREFIX + appName + ':workflow';
+      return WORKFLOW_STORAGE_PREFIX + appName + ':workflow' + (appName === 'seikyu_kappo' && seikyuVariant === 'detailed' ? ':detailed' : '');
     }
 
     function defaultWorkflow(appName) {
+      if (appName === 'seikyu_kappo' && seikyuVariant === 'detailed') return WorkflowJSON.fromDefinition(SeikyuWorkflowDefinition);
       return hasAppData(appName) ? clone(APP_DATA[appName].workflow) : null;
     }
 
@@ -1319,6 +1390,17 @@
     function normalizeWorkflowState(saved, appName) {
       const fallback = defaultWorkflow(appName);
       if (!saved || !Array.isArray(saved.nodes) || !fallback) return fallback;
+      if (saved.definition) {
+        const restored = WorkflowJSON.fromDefinition(WorkflowJSON.toDefinition(saved));
+        restored.nodes.forEach((node, index) => {
+          const previous = saved.nodes[index];
+          node.x = Math.max(0, numberOr(previous.x, node.x));
+          node.y = Math.max(0, numberOr(previous.y, node.y));
+          node.kind = KINDS.includes(previous.kind) ? previous.kind : 'none';
+        });
+        restored.nextId = Math.max(1, numberOr(saved.nextId, 1));
+        return restored;
+      }
 
       const usedIds = new Set();
       const nodes = saved.nodes.map((rawNode, index) => {
@@ -1372,6 +1454,10 @@
 
     function saveWorkflowState() {
       if (!workflowState || !hasAppData(app)) return;
+      if (workflowState.definition) {
+        try { window.localStorage.setItem(workflowStorageKey(app), JSON.stringify(workflowState)); } catch (error) {}
+        return;
+      }
       const payload = {
         version: 1,
         nodes: workflowState.nodes.map(node => ({
@@ -1420,6 +1506,9 @@
       nodeTitle.value = nodeData.title;
       nodeDescription.value = nodeData.description;
       nodeType.value = nodeData.kind;
+      document.getElementById('normalizedNodeFields').hidden = !nodeData.definition;
+      document.getElementById('nodeRole').value = nodeData.role || 'calculator';
+      document.getElementById('nodeStatus').value = nodeData.status || 'implemented';
       editorStatus.textContent = '選択中';
       nodeEditor.setAttribute('aria-hidden', 'false');
       nodeEditor.classList.remove('is-switching');
@@ -1429,11 +1518,21 @@
     function createWorkflowNode(nodeData) {
       const node = document.createElement('article');
       node.className = 'node ' + nodeData.kind + ' workflow-node';
+      if (nodeData.role && Object.hasOwn(WorkflowJSON.ROLES, nodeData.role)) {
+        node.classList.add('role-node', 'role-' + nodeData.role);
+        node.classList.toggle('is-planned', nodeData.status === 'planned');
+        node.setAttribute('tabindex', '0');
+        node.setAttribute('aria-label', nodeData.title + '、' + WorkflowJSON.ROLES[nodeData.role] + '、' + (nodeData.status === 'planned' ? '計画中' : '実装済み'));
+        const badge = document.createElement('span');
+        badge.className = 'role-badge';
+        badge.textContent = WorkflowJSON.ROLES[nodeData.role] + (nodeData.status === 'planned' ? ' / 計画中' : ' / 実装済み');
+        node.appendChild(badge);
+      }
       node.dataset.id = nodeData.id;
       node.dataset.node = nodeData.title;
       node.style.left = nodeData.x + 'px';
       node.style.top = nodeData.y + 'px';
-      node.innerHTML = '<div class="node-actions"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><small class="node-id" aria-hidden="true"></small><h3></h3><p></p><span class="node-kind-badge"></span>';
+      node.insertAdjacentHTML('afterbegin', '<div class="node-actions"><button class="node-action edit" type="button" aria-label="ノードを編集"></button><button class="node-action delete" type="button" aria-label="ノードを削除"></button></div><small class="node-id" aria-hidden="true"></small><h3></h3><p></p><span class="node-kind-badge"></span>');
       node.querySelector('.node-actions').setAttribute('aria-label', nodeData.title + 'の操作');
       node.querySelector('.node-id').textContent = nodeData.displayId;
       node.querySelector('h3').textContent = nodeData.title;
@@ -1445,7 +1544,14 @@
     }
 
     function bindWorkflowNode(node, nodeData) {
+      node.addEventListener('keydown', event => {
+        if (!editing && nodeData.definition && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          showNodeDetails(nodeData);
+        }
+      });
       node.addEventListener('click', event => {
+        if (!editing && nodeData.definition) { showNodeDetails(nodeData); return; }
         if (!editing || event.target.closest('.node-action')) return;
         selectNode(node);
       });
@@ -1581,6 +1687,21 @@
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('class', 'wire');
         path.setAttribute('d', wirePath(from, to, fromSize.width, fromSize.height, toSize.width, toSize.height));
+        if (workflowState.definition) {
+          const isReturn = to.y <= from.y;
+          path.classList.toggle('is-return', isReturn);
+          if (isReturn) {
+            const sx = from.x + fromSize.width, sy = from.y + fromSize.height / 2;
+            const ex = to.x + toSize.width, ey = to.y + toSize.height / 2;
+            const side = Math.max(sx, ex) + 35 + (Number(wire.id.slice(1)) % 4) * 15;
+            path.setAttribute('d', from.id === to.id
+              ? 'M ' + sx + ' ' + sy + ' C ' + side + ' ' + (sy - 70) + ' ' + side + ' ' + (sy + 70) + ' ' + sx + ' ' + (sy + 20)
+              : 'M ' + sx + ' ' + sy + ' C ' + side + ' ' + sy + ' ' + side + ' ' + ey + ' ' + ex + ' ' + ey);
+          }
+          const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+          title.textContent = from.title + ' → ' + to.title + ': ' + wire.on;
+          path.appendChild(title);
+        }
         path.setAttribute('marker-end', 'url(#workflowArrow)');
         workflowWires.appendChild(path);
       });
@@ -1588,6 +1709,7 @@
 
     function renderWorkflow() {
       updateContext();
+      updateJsonControls();
       workflowGroups.replaceChildren();
       workflowNodes.replaceChildren();
       workflowWires.innerHTML = '';
@@ -1614,6 +1736,7 @@
         workflowGroups.appendChild(group);
       });
       workflowState.nodes.forEach(nodeData => workflowNodes.appendChild(createWorkflowNode(nodeData)));
+      sizeWorkflowCanvas();
       drawWorkflowWires();
 
       if (!workflowState.nodes.some(node => node.id === selectedNodeId)) selectedNodeId = null;
@@ -1627,6 +1750,144 @@
         hideNodeEditor();
       }
     }
+
+    function sizeWorkflowCanvas() {
+      const normalized = Boolean(workflowState && workflowState.definition);
+      workflow.classList.toggle('normalized', normalized);
+      let width = 1050, height = 900;
+      if (normalized) workflowState.nodes.forEach(node => {
+        const size = workflowNodeSize(node);
+        width = Math.max(width, node.x + size.width + 130);
+        height = Math.max(height, node.y + size.height + 70);
+      });
+      workflowCanvas.style.width = width + 'px';
+      workflowCanvas.style.height = height + 'px';
+      workflowWires.setAttribute('width', width);
+      workflowWires.setAttribute('height', height);
+      workflowWires.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+      workflow.style.width = normalized ? (width + (editing ? 380 : 80)) + 'px' : '';
+      workflow.style.minHeight = normalized ? (height + 60) + 'px' : '';
+      workflow.style.setProperty('--editor-left', (width + 50) + 'px');
+    }
+
+    function updateJsonControls() {
+      const normalized = Boolean(workflowState && workflowState.definition);
+      document.getElementById('exportWorkflow').disabled = !normalized;
+      document.getElementById('roleLegend').hidden = !normalized;
+      document.getElementById('workflowVariantLabel').hidden = app !== 'seikyu_kappo';
+      document.getElementById('workflowVariant').value = seikyuVariant;
+    }
+
+    function showNodeDetails(node) {
+      const definition = WorkflowJSON.toDefinition(workflowState).nodes.find(item => item.id === node.id);
+      document.getElementById('nodeDetailsTitle').textContent = node.title + ' — ' + WorkflowJSON.ROLES[node.role];
+      const content = document.getElementById('nodeDetailsContent');
+      content.replaceChildren();
+      const labels = { id: 'ID', name: '名前', role: '担当種別', status: '実装状態', task: '作業', input: '入力', output: '出力', verify: '検証', impl: '実装', refs: '参照', learning: '学習・直しメモ' };
+      Object.entries(definition).forEach(([key, value]) => {
+        const heading = document.createElement('h3'), body = document.createElement('pre');
+        heading.textContent = labels[key] || key;
+        body.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+        content.append(heading, body);
+      });
+      const heading = document.createElement('h3');
+      heading.textContent = '接続条件（入出力）';
+      content.appendChild(heading);
+      workflowState.wires.filter(wire => wire.from === node.id || wire.to === node.id).forEach(wire => {
+        const line = document.createElement('p');
+        line.textContent = wire.from + ' → ' + wire.to + ': ' + wire.on;
+        content.appendChild(line);
+      });
+      document.getElementById('nodeDetailsDialog').showModal();
+    }
+
+    const jsonImportDialog = document.getElementById('jsonImportDialog');
+    const jsonImportError = document.getElementById('jsonImportError');
+    const jsonText = document.getElementById('jsonText');
+    const jsonFile = document.getElementById('jsonFile');
+    let fileReadSequence = 0;
+
+    document.getElementById('importWorkflow').addEventListener('click', () => {
+      fileReadSequence++;
+      jsonText.value = '';
+      jsonFile.value = '';
+      jsonImportError.textContent = '';
+      document.getElementById('confirmJsonImport').disabled = false;
+      jsonImportDialog.showModal();
+    });
+    document.getElementById('cancelJsonImport').addEventListener('click', () => jsonImportDialog.close());
+    jsonImportDialog.addEventListener('close', () => { fileReadSequence++; });
+    jsonFile.addEventListener('change', async () => {
+      const sequence = ++fileReadSequence, file = jsonFile.files[0];
+      const button = document.getElementById('confirmJsonImport');
+      if (!file) { button.disabled = false; return; }
+      jsonImportError.textContent = '';
+      jsonText.value = '';
+      if (file.size > WorkflowJSON.MAX_BYTES) {
+        jsonImportError.textContent = 'JSONファイルは1MB以内にしてください。';
+        button.disabled = true;
+        return;
+      }
+      button.disabled = true;
+      try {
+        const text = await file.text();
+        if (sequence === fileReadSequence && jsonImportDialog.open) jsonText.value = text;
+      } catch (error) {
+        if (sequence === fileReadSequence) jsonImportError.textContent = 'ファイルを読み込めませんでした。JSONを貼り付けてください。';
+      } finally {
+        if (sequence === fileReadSequence) button.disabled = false;
+      }
+    });
+    jsonText.addEventListener('input', () => {
+      fileReadSequence++;
+      document.getElementById('confirmJsonImport').disabled = false;
+    });
+    document.getElementById('jsonImportForm').addEventListener('submit', event => {
+      event.preventDefault();
+      if (document.getElementById('confirmJsonImport').disabled) return;
+      let imported;
+      try { imported = WorkflowJSON.parse(jsonText.value); } catch (error) {
+        jsonImportError.textContent = error.message;
+        return;
+      }
+      // 検証・配置が全て成功してから、現在の状態と保存先を切り替える。
+      if (app === 'seikyu_kappo') setSeikyuVariant('detailed');
+      workflowState = imported;
+      selectedNodeId = null;
+      saveWorkflowState();
+      jsonImportDialog.close();
+      updateEditControls();
+      renderWorkflow();
+      document.getElementById('jsonMessage').textContent = imported.nodes.length + 'ノード・' + imported.wires.length + '接続を取り込みました。';
+    });
+    document.getElementById('exportWorkflow').addEventListener('click', () => {
+      try {
+        const definition = WorkflowJSON.toDefinition(workflowState);
+        const blob = new Blob([JSON.stringify(definition, null, 2) + '\n'], { type: 'application/json' });
+        const url = URL.createObjectURL(blob), link = document.createElement('a');
+        link.href = url;
+        link.download = definition.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.normalized.json';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        document.getElementById('jsonMessage').textContent = '正規化JSONを書き出しました。';
+      } catch (error) { document.getElementById('jsonMessage').textContent = error.message; }
+    });
+
+    function setSeikyuVariant(variant) {
+      seikyuVariant = variant;
+      try { localStorage.setItem(WORKFLOW_STORAGE_PREFIX + 'seikyu_kappo:variant', variant); } catch (error) {}
+    }
+    document.getElementById('workflowVariant').addEventListener('change', event => {
+      if (app !== 'seikyu_kappo') return;
+      setSeikyuVariant(event.target.value === 'detailed' ? 'detailed' : 'simple');
+      workflowState = loadWorkflowState(app);
+      selectedNodeId = null;
+      document.getElementById('jsonMessage').textContent = '';
+      updateEditControls();
+      renderWorkflow();
+    });
 
     function uiEmptyStateMarkup() {
       return '<div class="empty-state ui-empty-state"><span class="empty-kicker">NO SCREENS</span><h3>このアプリの画面はまだ登録されていません</h3><p>スクリーンショットを登録すると、ワークフローとの対応を確認できます</p></div>';
@@ -1763,6 +2024,7 @@
     function activateApp(nextApp) {
       if (nextApp === app) return;
       app = nextApp;
+      document.getElementById('jsonMessage').textContent = '';
       appButtons.forEach(button => button.classList.toggle('active', button.dataset.app === app));
       workflowState = loadWorkflowState(app);
       selectedNodeId = null;
@@ -1786,6 +2048,7 @@
       const nextViewEl = document.getElementById(nextView);
       const currentViewEl = [...views].find(element => !element.classList.contains('hidden'));
       view = nextView;
+      document.getElementById('workflowJsonActions').hidden = view !== 'workflow';
       tabs.forEach(button => button.classList.toggle('active', button.dataset.view === nextView));
       if (viewSwapTimer) window.clearTimeout(viewSwapTimer);
       views.forEach(element => {
@@ -1821,6 +2084,7 @@
       try { window.localStorage.removeItem(workflowStorageKey(app)); } catch (error) {}
       workflowState = defaultWorkflow(app);
       selectedNodeId = null;
+      document.getElementById('jsonMessage').textContent = '';
       renderWorkflow();
     });
 
@@ -1841,6 +2105,13 @@
         title: '新しいノード',
         description: '追加したステップの説明'
       };
+      if (workflowState.definition) {
+        nodeData.role = 'calculator';
+        nodeData.status = 'planned';
+        nodeData.definition = { id, name: nodeData.title, role: nodeData.role, status: nodeData.status, task: nodeData.description, input: [], output: [], verify: [], impl: [], refs: [], learning: { cases: [], fix_notes: [], manual: [] } };
+        nodeData.x = 45;
+        nodeData.y = Math.max(160, ...workflowState.nodes.map(node => node.y + 210));
+      }
       workflowState.nodes.push(nodeData);
       selectedNodeId = nodeData.id;
       saveWorkflowState();
@@ -1855,6 +2126,10 @@
       nodeData.title = nodeTitle.value.trim() || '名称未設定';
       nodeData.description = nodeDescription.value.trim() || '説明未設定';
       nodeData.kind = KINDS.includes(nodeType.value) ? nodeType.value : 'none';
+      if (nodeData.definition) {
+        nodeData.role = document.getElementById('nodeRole').value;
+        nodeData.status = document.getElementById('nodeStatus').value;
+      }
       saveWorkflowState();
       renderWorkflow();
       const renderedNode = workflowNodeElement(nodeData.id);

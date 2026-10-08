@@ -2,6 +2,12 @@
 
 Claude/Codex間の引き継ぎ用。進行状態・次の一手はここに書く（個人memoryではなくrepo memory）。
 
+## 2026-10-08 — 担当種別付きワークフローJSON
+
+- feature branch `feat/workflow-json-import`：要件1〜4を実装、Nodeテスト13件成功。push・デプロイなし。
+- ブラウザ表示確認はユーザーの後続指示で省略。次の確認対象は実画面の配置とOSのファイル選択・ダウンロード。
+- 詳細と往復確認手順：[JSON取込・書き出しの検証記録](docs/workflow-json-import.md)。
+
 ## 2026-09-29時点の状態
 
 ### このセッションでやったこと（すべてmainへcommit・push・デプロイ済み）
