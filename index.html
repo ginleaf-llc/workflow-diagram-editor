@@ -577,6 +577,7 @@
       border: 2px solid var(--accent);
     }
     .chat.node .node-id, .agent.node .node-id { color: rgba(255,255,255,.65); }
+    .workflow-canvas .chat.node, .workflow-canvas .agent.node { position: absolute; }
     .chat.node h3, .agent.node h3 { color: #fff; }
     .chat.node p, .agent.node p { color: rgba(255,255,255,.85); }
     .chat.ui-screen-card, .agent.ui-screen-card {
@@ -1755,9 +1756,9 @@
       const normalized = Boolean(workflowState && workflowState.definition);
       workflow.classList.toggle('normalized', normalized);
       let width = 1050, height = 900;
-      if (normalized) workflowState.nodes.forEach(node => {
+      if (workflowState) workflowState.nodes.forEach(node => {
         const size = workflowNodeSize(node);
-        width = Math.max(width, node.x + size.width + 130);
+        if (normalized) width = Math.max(width, node.x + size.width + 130);
         height = Math.max(height, node.y + size.height + 70);
       });
       workflowCanvas.style.width = width + 'px';
