@@ -140,14 +140,16 @@ test('ファイル読込・サイズ制限・遅い読込結果による貼り�
 });
 
 test('既存APP_DATA・3ビューの生成関数・kind装飾のCSSは変更前と一致', () => {
-  const before = execFileSync('git', ['show', '0065dccf89ad831fc695da3054f382882b055316:index.html'], { encoding: 'utf8' });
+  const before = execFileSync('git', ['show', 'ce5ecc87b3ab95be00833beab6b23e8e300c5166:index.html'], { encoding: 'utf8' });
   const previousInline = before.match(/<script>([\s\S]*?)<\/script>/)[1];
   const dataLiteral = script => script.slice(script.indexOf('    const APP_DATA ='), script.indexOf("    let app = 'aikensyu';"));
   assert.equal(dataLiteral(inline), dataLiteral(previousInline));
   const uiFunctions = script => script.slice(script.indexOf('    function uiEmptyStateMarkup()'), script.indexOf('    function updateEditControls()'));
   assert.equal(uiFunctions(inline), uiFunctions(previousInline));
   const kindCSS = source => source.slice(source.indexOf('    .agent { --accent:'), source.indexOf('    .flow-board > svg'));
-  assert.equal(kindCSS(html), kindCSS(before));
+  const pinnedAbsolute = '    .workflow-canvas .chat.node, .workflow-canvas .agent.node { position: absolute; }\n';
+  assert.ok(html.includes(pinnedAbsolute), 'AIノードは座標どおりに置く(position: absolute)');
+  assert.equal(kindCSS(html).replace(pinnedAbsolute, ''), kindCSS(before));
   const h = harness();
   for (const name of ['aikensyu', 'web-service-ginleaf']) {
     h.subject.activateApp(name);
